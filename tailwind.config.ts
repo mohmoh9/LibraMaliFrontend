@@ -60,6 +60,7 @@ const config: Config = {
         "slide-up": "slideUp 0.4s ease-out forwards",
         "slide-in": "slideIn 0.3s ease-out forwards",
         "shimmer": "shimmer 1.5s infinite",
+        "shake":   "shake 0.4s ease-in-out",
       },
       keyframes: {
         fadeIn: {
@@ -77,6 +78,13 @@ const config: Config = {
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
+        },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "20%":       { transform: "translateX(-4px)" },
+          "40%":       { transform: "translateX(4px)" },
+          "60%":       { transform: "translateX(-4px)" },
+          "80%":       { transform: "translateX(4px)" },
         },
       },
     },
