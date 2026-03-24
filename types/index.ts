@@ -17,10 +17,12 @@ export interface PageResponse<T> {
   content: T[];
   totalElements: number;
   totalPages: number;
-  number: number;
   size: number;
+  number: number; // Numéro de la page actuelle (0-indexed)
+  numberOfElements: number; // Nombre d'éléments sur la page actuelle
   first: boolean;
   last: boolean;
+  empty: boolean;
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -63,18 +65,19 @@ export interface Product {
   titre: string;
   auteur: string;
   prix: number;
-  prixPromo?: number;
+  prixPromo: number | null; // Changé ici : peut être null
   stock: number;
-  imageUrl?: string;
+  enStock: boolean;
+  imageUrl: string | null; // Changé ici : ton JSON montre null
   description?: string;
   noteMoyenne: number;
   nbAvis: number;
   actif: boolean;
-  enStock: boolean;
   creeLe: string;
-  category?: Category;
-  promotionCode?: string;
-  promotionPct?: number;
+  categoryId: number;
+  categoryNom: string;
+  promotionCode: string | null;
+  promotionPct: number | null; // Peut être null selon ton JSON
 }
 
 // ── Panier ────────────────────────────────────────────────────────────────────

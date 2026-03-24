@@ -3,12 +3,13 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "**",
+        protocol: 'https',
+        hostname: '**', // Autorise temporairement tous les domaines pour le test
       },
       {
-        protocol: "http",
-        hostname: "localhost",
+        protocol: 'http',
+        hostname: 'localhost', // Si tes images viennent de ton backend local Spring Boot
+        port: '8080',
       },
     ],
   },

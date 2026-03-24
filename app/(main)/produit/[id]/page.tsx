@@ -110,12 +110,12 @@ export default function ProduitPage() {
         <Link href="/" className="hover:text-encre transition-colors">Accueil</Link>
         <span>/</span>
         <Link href="/catalogue" className="hover:text-encre transition-colors">Catalogue</Link>
-        {product.category && (
+        {product.categoryNom && (
           <>
             <span>/</span>
-            <Link href={`/catalogue?categoryId=${product.category.id}`}
+            <Link href={`/catalogue?categoryId=${product.categoryId}`}
               className="hover:text-encre transition-colors">
-              {product.category.nom}
+              {product.categoryNom}
             </Link>
           </>
         )}
@@ -126,54 +126,39 @@ export default function ProduitPage() {
       <div className="grid md:grid-cols-2 gap-12 lg:gap-20 animate-fade-in">
 
         {/* ── Image ────────────────────────────────────────────────────── */}
-<div className="relative">
-  <div className="sticky top-24">
-    <div className="relative h-[420px] md:h-[520px] bg-sable rounded-3xl overflow-hidden">
-      {product.imageUrl ? (
-        <Image 
-          // Sécurisation de l'URL pour Next.js Image
-          src={
-            product.imageUrl.startsWith('http') 
-              ? product.imageUrl 
-              : product.imageUrl.startsWith('/') 
-                ? product.imageUrl 
-                : `/${product.imageUrl}`
-          } 
-          alt={product.titre || "Image du produit"} 
-          fill
-          className="object-contain p-6" 
-          sizes="(max-width: 768px) 100vw, 50vw" 
-          priority // Ajouté car c'est l'image principale de la page (LCP)
-        />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-40 h-56 bg-encre/10 rounded-xl flex items-center justify-center">
-            <span className="font-display text-6xl text-encre/20">
-              {product.titre?.charAt(0) || "?"}
-            </span>
+        <div className="relative">
+          <div className="sticky top-24">
+            <div className="relative h-[420px] md:h-[520px] bg-sable rounded-3xl overflow-hidden">
+              {product.imageUrl && (product.imageUrl.startsWith('http') || product.imageUrl.startsWith('/')) ? (
+                <Image src={product.imageUrl} alt={product.titre} fill
+                  className="object-contain p-6" sizes="(max-width: 768px) 100vw, 50vw" />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-40 h-56 bg-encre/10 rounded-xl flex items-center justify-center">
+                    <span className="font-display text-6xl text-encre/20">
+                      {product.titre.charAt(0)}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {enPromo && (
+                <div className="absolute top-4 right-4 bg-or text-white text-sm font-bold
+                                px-3 py-1.5 rounded-full shadow-lg">
+                  -{product.promotionPct}%
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      )}
-      
-      {/* Utilisation de product.promotionPct directement pour la condition */}
-      {product.promotionPct && product.promotionPct > 0 && (
-        <div className="absolute top-6 right-6 bg-or text-white text-sm font-bold
-                        px-4 py-2 rounded-full shadow-lg z-10">
-          -{product.promotionPct}%
-        </div>
-      )}
-    </div>
-  </div>
-</div>
 
         {/* ── Détails ───────────────────────────────────────────────────── */}
         <div className="space-y-6">
           {/* Catégorie */}
-          {product.category && (
-            <Link href={`/catalogue?categoryId=${product.category.id}`}
+          {product.categoryNom && (
+            <Link href={`/catalogue?categoryId=${product.categoryId}`}
               className="inline-block text-xs font-body uppercase tracking-widest text-or
                          hover:text-or-dark transition-colors">
-              {product.category.nom}
+              {product.categoryNom}
             </Link>
           )}
 

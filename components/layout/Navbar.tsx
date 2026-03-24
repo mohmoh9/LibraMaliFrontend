@@ -37,6 +37,7 @@ export default function Navbar() {
   const totalArticles = cart?.nombreArticles ?? 0;
 
   const navLinks = [
+    { href: "/", label: "Acceuil" },
     { href: "/catalogue", label: "Catalogue" },
     { href: "/catalogue?nouveautes=true", label: "Nouveautés" },
   ];

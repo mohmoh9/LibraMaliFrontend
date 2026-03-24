@@ -151,7 +151,7 @@ export default function PanierPage() {
               {/* Image */}
               <Link href={`/produit/${item.productId}`}
                 className="w-16 h-20 bg-sable rounded-xl overflow-hidden shrink-0 relative">
-                {item.productImageUrl ? (
+                {item.productImageUrl && (item.productImageUrl.startsWith('http') || item.productImageUrl.startsWith('/')) ? (
                   <Image src={item.productImageUrl} alt={item.productTitre}
                     fill className="object-cover" />
                 ) : (
