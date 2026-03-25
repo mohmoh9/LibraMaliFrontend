@@ -83,19 +83,21 @@ export default function AdminUtilisateursPage() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   /* ── Changement de rôle ─────────────────────────────────────────────── */
-  const handleRoleChange = async (userId: number, newRole: Role) => {
-    setLoadingId(userId);
-    setOpenMenuId(null);
-    try {
-      await api.patch(`/users/${userId}/role`, { role: newRole });
-      setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      toast.success("Rôle mis à jour !");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setLoadingId(null);
-    }
-  };
+const handleRoleChange = async (userId: number, newRole: Role) => {
+  setLoadingId(userId);
+  setOpenMenuId(null);
+  try {
+    // Le backend renverra une erreur 403 si userId est l'ID de l'admin actuel
+    await api.patch(`/users/${userId}/role`, { role: newRole });
+    setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    toast.success("Rôle mis à jour !");
+  } catch (err) {
+    // Le message "Vous ne pouvez pas modifier votre propre rôle" sera affiché ici
+    toast.error(getErrorMessage(err)); 
+  } finally {
+    setLoadingId(null);
+  }
+};
 
   /* ── Suppression ────────────────────────────────────────────────────── */
   const handleDelete = async (user: UserType) => {

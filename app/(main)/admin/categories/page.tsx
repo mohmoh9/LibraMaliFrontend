@@ -1,251 +1,284 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
-  Plus, Search, Edit2, Trash2, MoreVertical, 
-  Folder, BookOpen, Loader2, AlertCircle, CheckCircle2 
+  Plus, Search, Pencil, Trash2, 
+  Tag, Loader2, X, Info, BookOpen 
 } from "lucide-react";
 import { toast } from "sonner";
-import api from "@/lib/api";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import api, { getErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminGuard from "@/components/admin/AdminGuard";
+import Modal from "@/components/ui/Modal";
 import type { Category } from "@/types";
+
+/* ── Schéma de validation Zod ────────────────────────────────────────────── */
+const categorySchema = z.object({
+  nom: z.string().min(1, "Le nom est obligatoire"),
+  description: z.string().optional(),
+});
+type CategoryForm = z.infer<typeof categorySchema>;
+
+/* ── Skeleton de chargement ──────────────────────────────────────────────── */
+function SkeletonRow() {
+  return (
+    <tr>
+      {[250, 400, 100].map((w, i) => (
+        <td key={i} className="px-4 py-4">
+          <div className="skeleton h-4 rounded" style={{ width: w }} />
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  
-  // États pour le formulaire (Ajout/Edition)
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [formData, setFormData] = useState({ nom: "", description: "" });
-  const [submitting, setSubmitting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const form = useForm<CategoryForm>({ 
+    resolver: zodResolver(categorySchema) 
+  });
 
-  const fetchCategories = async () => {
+  /* ── Chargement des données ───────────────────────────────────────────── */
+  const fetchCategories = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const { data } = await api.get("/categories");
-      setCategories(data.data);
+      // On s'adapte au format de réponse (data.data ou data direct)
+      setCategories(data.data ?? data);
     } catch (err) {
-      toast.error("Impossible de charger les catégories");
+      toast.error("Erreur lors du chargement des catégories.");
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => { fetchCategories(); }, [fetchCategories]);
+
+  /* ── Gestion des actions ──────────────────────────────────────────────── */
+  const openCreate = () => {
+    setEditCategory(null);
+    form.reset({ nom: "", description: "" });
+    setModalOpen(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.nom.trim()) return;
-
-    setSubmitting(true);
-    try {
-      if (editingCategory) {
-        const { data } = await api.put(`/admin/categories/${editingCategory.id}`, formData);
-        setCategories(categories.map(c => c.id === editingCategory.id ? data.data : c));
-        toast.success("Catégorie mise à jour");
-      } else {
-        const { data } = await api.post("/admin/categories", formData);
-        setCategories([data.data, ...categories]);
-        toast.success("Catégorie créée avec succès");
-      }
-      closeModal();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Une erreur est survenue");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Voulez-vous vraiment supprimer cette catégorie ?")) return;
-
-    try {
-      await api.delete(`/admin/categories/${id}`);
-      setCategories(categories.filter(c => c.id !== id));
-      toast.success("Catégorie supprimée");
-    } catch (err) {
-      toast.error("Erreur lors de la suppression");
-    }
-  };
-
-  const openModal = (category?: Category) => {
-    if (category) {
-      setEditingCategory(category);
-      setFormData({ nom: category.nom, description: category.description || "" });
-    } else {
-      setEditingCategory(null);
-      setFormData({ nom: "", description: "" });
-    }
-    setIsModalOpen(true);
+  const openEdit = (c: Category) => {
+    setEditCategory(c);
+    form.reset({
+      nom: c.nom,
+      description: c.description ?? "",
+    });
+    setModalOpen(true);
   };
 
   const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingCategory(null);
-    setFormData({ nom: "", description: "" });
+    setModalOpen(false);
+    setEditCategory(null);
   };
 
-  const filteredCategories = categories.filter(c => 
-    c.nom.toLowerCase().includes(search.toLowerCase())
+  const handleSave = async (values: CategoryForm) => {
+    setSaving(true);
+    try {
+      if (editCategory) {
+        await api.put(`/categories/${editCategory.id}`, values);
+        toast.success("Catégorie mise à jour !");
+      } else {
+        await api.post("/categories", values);
+        toast.success("Catégorie créée !");
+      }
+      fetchCategories();
+      closeModal();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (c: Category) => {
+    if (!confirm(`Supprimer la catégorie « ${c.nom} » ?\nNote : Cela échouera si des livres y sont encore rattachés.`)) return;
+    
+    try {
+      await api.delete(`/categories/${c.id}`);
+      toast.success("Catégorie supprimée avec succès.");
+      fetchCategories();
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    }
+  };
+
+  /* ── Filtrage côté client ─────────────────────────────────────────────── */
+  const filteredCategories = categories.filter(c =>
+    c.nom.toLowerCase().includes(search.toLowerCase()) ||
+    c.description?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-          <AdminGuard>
-                <AdminLayout>
-    <div className="p-6 lg:p-10 space-y-8 animate-in fade-in duration-500">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Catégories</h1>
-          <p className="text-slate-500 font-medium mt-1">Gérez les rayons de votre librairie</p>
-        </div>
-        <button 
-          onClick={() => openModal()}
-          className="flex items-center justify-center gap-2 bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 active:scale-95"
-        >
-          <Plus className="w-5 h-5" /> Ajouter une catégorie
-        </button>
-      </div>
-
-      {/* Barre de recherche */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-        <input 
-          type="text"
-          placeholder="Rechercher une catégorie..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all font-medium"
-        />
-      </div>
-
-      {/* Table / Grille */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-slate-300" />
-          <p className="text-slate-400 font-bold animate-pulse">Chargement des catégories...</p>
-        </div>
-      ) : (
-        <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400">Nom</th>
-                <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 hidden md:table-cell">Description</th>
-                <th className="px-6 py-5 text-xs font-black uppercase tracking-widest text-slate-400 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredCategories.map((category) => (
-                <tr key={category.id} className="group hover:bg-slate-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-slate-900 transition-all shadow-sm">
-                        <Folder className="w-5 h-5" />
-                      </div>
-                      <span className="font-bold text-slate-900">{category.nom}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 hidden md:table-cell">
-                    <p className="text-sm text-slate-500 line-clamp-1 max-w-xs italic">
-                      {category.description || "Aucune description"}
-                    </p>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button 
-                        onClick={() => openModal(category)}
-                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white rounded-lg transition-all shadow-sm border border-transparent hover:border-slate-100"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(category.id)}
-                        className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <AdminGuard>
+      <AdminLayout>
+        <div className="p-6 lg:p-10 space-y-6">
           
-          {filteredCategories.length === 0 && (
-            <div className="py-20 text-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-slate-200" />
-              </div>
-              <p className="text-slate-400 font-medium">Aucune catégorie trouvée</p>
+          {/* ── En-tête ──────────────────────────────────────────────── */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h1 className="font-display text-display-md font-bold text-encre">Catégories</h1>
+              <p className="text-sm text-encre-muted font-body mt-0.5">
+                {categories.length} catégorie{categories.length > 1 ? "s" : ""} au total
+              </p>
             </div>
-          )}
-        </div>
-      )}
+            <button onClick={openCreate} className="btn-primary">
+              <Plus className="w-4 h-4" /> Nouvelle catégorie
+            </button>
+          </div>
 
-      {/* Modal Formulaire */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in" onClick={closeModal} />
-          <div className="relative bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 space-y-6 animate-in zoom-in-95 duration-200">
-            <h2 className="text-2xl font-black text-slate-900">
-              {editingCategory ? "Modifier la catégorie" : "Nouvelle catégorie"}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nom du rayon</label>
-                <input 
-                  autoFocus
-                  required
-                  value={formData.nom}
-                  onChange={(e) => setFormData({...formData, nom: e.target.value})}
-                  placeholder="Ex: Science-Fiction, Développement Personnel..."
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all font-bold text-slate-900"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Description (Optionnel)</label>
-                <textarea 
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Une brève description de cette collection..."
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all font-medium text-slate-900 resize-none"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button 
-                  type="button"
-                  onClick={closeModal}
-                  className="flex-1 px-6 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
-                >
-                  Annuler
+          {/* ── Filtres ──────────────────────────────────────────────── */}
+          <div className="flex flex-wrap gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-encre-muted" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Rechercher une catégorie..."
+                className="pl-9 pr-9 py-2 text-sm font-body bg-white border border-sable-dark rounded-xl
+                           focus:outline-none focus:ring-2 focus:ring-or/30 focus:border-or w-64 text-encre"
+              />
+              {search && (
+                <button onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-encre-muted hover:text-encre">
+                  <X className="w-3.5 h-3.5" />
                 </button>
-                <button 
-                  type="submit"
-                  disabled={submitting || !formData.nom.trim()}
-                  className="flex-1 bg-slate-900 text-white px-6 py-4 rounded-2xl font-black hover:bg-slate-800 transition-all disabled:opacity-50 disabled:scale-100 active:scale-95 flex items-center justify-center gap-2"
-                >
-                  {submitting && <Loader2 className="w-5 h-5 animate-spin" />}
-                  {editingCategory ? "Enregistrer" : "Créer le rayon"}
-                </button>
-              </div>
-            </form>
+              )}
+            </div>
+          </div>
+
+          {/* ── Tableau ──────────────────────────────────────────────── */}
+          <div className="card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm font-body">
+                <thead className="border-b border-sable">
+                  <tr>
+                    {["Nom", "Description", "Actions"].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs uppercase tracking-wider text-encre-muted whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-sable">
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+                  ) : filteredCategories.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="py-16 text-center">
+                        <Tag className="w-10 h-10 text-sable-dark mx-auto mb-3" />
+                        <p className="font-display text-lg text-encre">Aucune catégorie trouvée</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCategories.map(c => (
+                      <tr key={c.id} className="hover:bg-ivoire transition-colors group">
+                        <td className="px-4 py-4">
+                          <span className="font-medium text-encre">{c.nom}</span>
+                        </td>
+                        <td className="px-4 py-4 text-encre-muted max-w-md">
+                          <p className="truncate">{c.description || "—"}</p>
+                        </td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-sable-dark" />
+                          <span className={cn(
+                            "text-xs font-medium px-2 py-0.5 rounded-full",
+                            (c as any).nbProduits > 0 ? "bg-sable text-encre" : "bg-ivoire text-encre-muted"
+                          )}>
+                            {(c as any).nbProduits || 0}
+                          </span>
+                        </div>
+                      </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => openEdit(c)}
+                              className="p-1.5 rounded-lg text-encre-muted hover:text-encre hover:bg-sable/60 transition-colors"
+                              title="Modifier"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(c)}
+                              className="p-1.5 rounded-lg text-encre-muted hover:text-error hover:bg-red-50 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      )}
-    </div>
-          </AdminLayout>
-          </AdminGuard>
+
+        {/* ── Modale de création/édition ─────────────────────────────── */}
+        <Modal
+          open={modalOpen}
+          onClose={closeModal}
+          title={editCategory ? `Modifier « ${editCategory.nom} »` : "Nouvelle catégorie"}
+          size="md"
+        >
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-5 animate-fade-in">
+            <div className="space-y-4">
+              {/* Champ Nom */}
+              <div>
+                <label className="input-label flex items-center gap-2">
+                  Nom de la catégorie *
+                </label>
+                <input 
+                  {...form.register("nom")} 
+                  className="input-field" 
+                  placeholder="Ex: Littérature, Science-Fiction..." 
+                />
+                {form.formState.errors.nom && (
+                  <p className="text-xs text-error mt-1">{form.formState.errors.nom.message}</p>
+                )}
+              </div>
+
+              {/* Champ Description */}
+              <div>
+                <label className="input-label">Description</label>
+                <textarea 
+                  {...form.register("description")} 
+                  rows={4}
+                  className="input-field resize-none" 
+                  placeholder="Expliquez brièvement le contenu de cette catégorie..." 
+                />
+              </div>
+            </div>
+
+            {/* Actions de la modale */}
+            <div className="flex gap-3 pt-4 border-t border-sable">
+              <button type="submit" disabled={saving} className="btn-primary">
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {editCategory ? "Enregistrer les modifications" : "Créer la catégorie"}
+              </button>
+              <button type="button" onClick={closeModal} className="btn-secondary">
+                Annuler
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </AdminLayout>
+    </AdminGuard>
   );
 }

@@ -116,7 +116,7 @@ export default function AdminCommandesPage() {
               <table className="w-full text-sm font-body">
                 <thead className="border-b border-sable">
                   <tr>
-                    {["#", "Client", "Date", "Montant", "Statut", "Actions"].map(h => (
+                    {["#CMD", "Client", "Date", "Montant", "Statut", "Actions"].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs uppercase tracking-wider text-encre-muted">
                         {h}
                       </th>
@@ -128,7 +128,7 @@ export default function AdminCommandesPage() {
                     const transitions = TRANSITIONS[order.statut as StatutCommande] ?? [];
                     return (
                       <tr key={order.id} className="hover:bg-ivoire transition-colors">
-                        <td className="px-4 py-3 font-mono text-xs text-encre-muted">#{order.id}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-encre-muted">#CMD{order.id}</td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-encre">{order.userNom}</p>
                           <p className="text-xs text-encre-muted">{order.userEmail}</p>

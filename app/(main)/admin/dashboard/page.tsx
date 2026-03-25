@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                 <table className="w-full text-sm font-body">
                   <thead>
                     <tr className="border-b border-sable">
-                      {["#", "Client", "Date", "Montant", "Statut", ""].map((h) => (
+                      {["#CMD", "Client", "Date", "Montant", "Statut", ""].map((h) => (
                         <th key={h} className="px-4 py-3 text-left text-xs uppercase tracking-wider text-encre-muted">
                           {h}
                         </th>
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
                   <tbody className="divide-y divide-sable">
                     {recentOrders.map((order) => (
                       <tr key={order.id} className="hover:bg-ivoire transition-colors">
-                        <td className="px-4 py-3 font-mono text-xs text-encre-muted">#{order.id}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-encre-muted">#CMD{order.id}</td>
                         <td className="px-4 py-3">
                           <p className="font-medium text-encre">{order.userNom}</p>
                           <p className="text-xs text-encre-muted">{order.userEmail}</p>
