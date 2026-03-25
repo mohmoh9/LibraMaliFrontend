@@ -161,6 +161,13 @@ export default function Navbar() {
                   )}
                   </div>
                   <div>
+                  {role === "INFLUENCEUR" && (
+                    <Link href="/influenceur" className="dropdown-item">
+                      Dashboard admin
+                    </Link>
+                  )}
+                  </div>
+                  <div>
                   <Link href="/mon-compte/commandes" className="dropdown-item">
                     Mes commandes
                   </Link>

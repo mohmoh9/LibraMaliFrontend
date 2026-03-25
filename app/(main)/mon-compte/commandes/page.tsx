@@ -110,7 +110,7 @@ export default function MesCommandesPage() {
                 <div className="flex items-center gap-4">
                   <div>
                     <p className="font-body font-medium text-encre text-sm">
-                      Commande #{order.id}
+                      Commande #CMD{order.id}
                     </p>
                     <p className="text-xs text-encre-muted font-body">
                       {formatDate(order.dateCommande)}

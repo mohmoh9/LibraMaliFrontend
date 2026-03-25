@@ -49,22 +49,24 @@ export default function ProfilPage() {
     }
   };
 
-  const handleAddAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddingAddr(true);
-    try {
-      await api.post("/users/me/addresses", newAddr);
-      const { data } = await api.get(`/users/${user!.id}/addresses`);
-      setAddresses(data.data);
-      setNewAddr({ rue: "", quartier: "", ville: "", complement: "" });
-      setShowAddrForm(false);
-      toast.success("Adresse ajoutée !");
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setAddingAddr(false);
-    }
-  };
+const handleAddAddress = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setAddingAddr(true);
+  try {
+    // MODIFICATION ICI : On utilise /addresses au lieu de /users/me/addresses
+    await api.post("/addresses", newAddr); 
+    
+    const { data } = await api.get(`/users/${user!.id}/addresses`);
+    setAddresses(data.data);
+    setNewAddr({ rue: "", quartier: "", ville: "", complement: "" });
+    setShowAddrForm(false);
+    toast.success("Adresse ajoutée !");
+  } catch (err) {
+    toast.error(getErrorMessage(err));
+  } finally {
+    setAddingAddr(false);
+  }
+};
 
   const handleDeleteAddr = async (addrId: number) => {
     if (!confirm("Supprimer cette adresse ?")) return;

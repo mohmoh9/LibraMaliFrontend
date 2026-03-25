@@ -15,7 +15,7 @@ import { formatPrix, formatDateCourte, cn } from "@/lib/utils";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminGuard from "@/components/admin/AdminGuard";
 import Modal from "@/components/ui/Modal";
-import type { Promotion, Product, PageResponse } from "@/types";
+import type { Promotion, Product, PageResponse, InfluenceurStats } from "@/types";
 
 /* ── Schéma Zod ─────────────────────────────────────────────────────────── */
 const promoSchema = z.object({
@@ -29,6 +29,7 @@ const promoSchema = z.object({
   dateDebut:   z.string().min(1, "Date de début obligatoire"),
   dateFin:     z.string().min(1, "Date de fin obligatoire"),
   productId:   z.coerce.number().optional(),
+  influenceurId: z.string().optional().nullable(), // Ajoutez ceci
 }).refine(d => new Date(d.dateFin) > new Date(d.dateDebut), {
   message: "La date de fin doit être postérieure à la date de début",
   path: ["dateFin"],
@@ -75,7 +76,8 @@ function StatutBadge({ promo }: { promo: Promotion }) {
 function SkeletonRow() {
   return (
     <tr>
-      {[80, 60, 140, 120, 100, 90].map((w, i) => (
+      {/* On passe de 6 à 7 colonnes dans le map */}
+      {[80, 60, 140, 100, 100, 90, 80].map((w, i) => (
         <td key={i} className="px-4 py-3">
           <div className="skeleton h-4 rounded" style={{ width: w }} />
         </td>
@@ -100,14 +102,48 @@ export default function AdminPromotionsPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const form = useForm<PromoForm>({ resolver: zodResolver(promoSchema) });
-
+const [influenceurs, setInfluenceurs] = useState<InfluenceurStats[]>([]);
+const selectedInfluenceurId = form.watch("influenceurId");
   /* ── Chargement ─────────────────────────────────────────────────────── */
-  useEffect(() => {
-    api.get("/products?page=0&size=100").then(({ data }) => {
-      const paged: PageResponse<Product> = data.data;
-      setProducts(paged.content);
-    }).catch(() => {});
-  }, []);
+useEffect(() => {
+  let isMounted = true; // Empêche les fuites de mémoire sur un composant démonté
+  
+  const loadData = async () => {
+    // Optionnel : tu peux ajouter setLoading(true) ici
+    try {
+      const [prodRes, infRes] = await Promise.all([
+        api.get("/products?size=100"), // On demande une taille large si c'est pour un select
+        api.get("/influenceurs/list")
+      ]);
+
+      if (!isMounted) return;
+
+      // Extraction sécurisée avec valeurs par défaut
+      const productList = prodRes.data?.data?.content || [];
+      const influenceurList = infRes.data?.data || [];
+
+      setProducts(productList);
+      setInfluenceurs(influenceurList);
+      
+      console.log(`Données chargées : ${productList.length} produits, ${influenceurList.length} influenceurs`);
+      
+    } catch (err) {
+      if (!isMounted) return;
+      console.error("Erreur chargement ressources:", err);
+      toast.error("Impossible de charger les listes de produits ou d'influenceurs");
+      setProducts([]);
+      setInfluenceurs([]);
+    } finally {
+      // if (isMounted) setLoading(false);
+    }
+  };
+
+  loadData();
+
+  return () => {
+    isMounted = false; // Nettoyage lors du démontage du composant
+  };
+}, []);
 
   const fetchPromos = useCallback(async () => {
     setLoading(true);
@@ -141,44 +177,49 @@ export default function AdminPromotionsPage() {
     setModalOpen(true);
   };
 
-  const openEdit = (p: Promotion) => {
-    setEditPromo(p);
-    form.reset({
-      code:        p.code,
-      pourcentage: p.pourcentage,
-      dateDebut:   toInputDate(p.dateDebut),
-      dateFin:     toInputDate(p.dateFin),
-      productId:   p.productId ?? undefined,
-    });
-    setModalOpen(true);
-  };
+const openEdit = (p: Promotion) => {
+  setEditPromo(p);
+  form.reset({
+    code:         p.code,
+    pourcentage: p.pourcentage,
+    dateDebut:   toInputDate(p.dateDebut),
+    dateFin:     toInputDate(p.dateFin),
+    productId:   p.productId ?? undefined,
+    influenceurId: p.influenceurId?.toString() ?? "", // Ajoute cette ligne
+  });
+  setModalOpen(true);
+};
 
   /* ── Sauvegarder ────────────────────────────────────────────────────── */
-  const handleSave = async (values: PromoForm) => {
-    setSaving(true);
-    try {
-      const payload = {
-        ...values,
-        code:      values.code.toUpperCase(),
-        productId: values.productId || undefined,
-        dateDebut: new Date(values.dateDebut).toISOString(),
-        dateFin:   new Date(values.dateFin).toISOString(),
-      };
-      if (editPromo) {
-        await api.put(`/promotions/${editPromo.id}`, payload);
-        toast.success("Promotion mise à jour !");
-      } else {
-        await api.post("/promotions", payload);
-        toast.success("Promotion créée !");
-      }
-      setModalOpen(false);
-      fetchPromos();
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setSaving(false);
+const handleSave = async (values: PromoForm) => {
+  setSaving(true);
+  try {
+    const payload = {
+      ...values,
+      code: values.code.toUpperCase(),
+      // Conversion forcée en nombre ou null
+      productId: values.productId ? Number(values.productId) : null,
+      influenceurId: values.influenceurId ? Number(values.influenceurId) : null,
+      dateDebut: new Date(values.dateDebut).toISOString(),
+      dateFin: new Date(values.dateFin).toISOString(),
+    };
+
+    if (editPromo) {
+      await api.put(`/promotions/${editPromo.id}`, payload);
+      toast.success("Promotion mise à jour !");
+    } else {
+      await api.post("/promotions", payload);
+      toast.success("Promotion créée !");
     }
-  };
+    
+    setModalOpen(false);
+    fetchPromos(); // Recharge la liste
+  } catch (err) {
+    toast.error(getErrorMessage(err));
+  } finally {
+    setSaving(false);
+  }
+};
 
   /* ── Toggle actif ───────────────────────────────────────────────────── */
   const handleToggle = async (promo: Promotion) => {
@@ -257,7 +298,7 @@ export default function AdminPromotionsPage() {
               <table className="w-full text-sm font-body">
                 <thead className="border-b border-sable">
                   <tr>
-                    {["Code", "Réduction", "Période", "Produit", "Statut", "Actions"].map(h => (
+                    {["Code", "Réduction", "Période", "Produit", "Influenceur", "Statut", "Actions"].map(h => (
                       <th key={h} className="px-4 py-3 text-left text-xs uppercase tracking-wider text-encre-muted whitespace-nowrap">
                         {h}
                       </th>
@@ -314,6 +355,22 @@ export default function AdminPromotionsPage() {
                               <span className="text-xs text-encre-muted">Global (panier)</span>
                             )}
                           </td>
+
+                          {/* Influenceur */}
+<td className="px-4 py-3">
+  {promo.influenceurNom ? (
+    <div className="flex flex-col">
+      <span className="text-xs font-medium text-encre">
+        {promo.influenceurNom}
+      </span>
+      <span className="text-[10px] text-or font-body uppercase tracking-tight">
+        Partenaire
+      </span>
+    </div>
+  ) : (
+    <span className="text-xs text-encre-muted italic">Interne</span>
+  )}
+</td>
 
                           {/* Statut */}
                           <td className="px-4 py-3">
@@ -454,19 +511,55 @@ export default function AdminPromotionsPage() {
               </div>
             </div>
 
-            {/* Produit lié */}
-            <div>
-              <label className="input-label">
-                Produit lié{" "}
-                <span className="normal-case tracking-normal text-encre-muted/70">(optionnel — vide = promo globale)</span>
-              </label>
-              <select {...form.register("productId")} className="input-field">
-                <option value="">Promo globale (tout le panier)</option>
-                {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.titre} — {p.auteur}</option>
-                ))}
-              </select>
-            </div>
+{/* Influenceur lié */}
+<div className="bg-or/5 p-4 rounded-xl border border-or/10 space-y-3">
+  <div>
+    <label className="input-label text-or-dark">
+      Influenceur / Partenaire{" "}
+      <span className="normal-case tracking-normal opacity-70">(Lien direct)</span>
+    </label>
+    <select 
+      {...form.register("influenceurId")} 
+      className="input-field border-or/20 focus:border-or focus:ring-or/20"
+    >
+      <option value="">Aucun (Promotion Interne)</option>
+      {Array.isArray(influenceurs) && influenceurs.map((inf) => (
+        <option key={inf.id} value={inf.id}>
+          {inf.userNom}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Code Promo - On l'affiche juste après l'influenceur pour la cohérence */}
+  <div>
+    <label className="input-label">Code du coupon *</label>
+    <input
+      {...form.register("code")}
+      placeholder="EX: MALI20"
+      className="input-field font-mono uppercase font-bold"
+      onChange={e => form.setValue("code", e.target.value.toUpperCase())}
+    />
+    <p className="text-[10px] text-encre-muted uppercase tracking-widest mt-1">
+      {selectedInfluenceurId 
+        ? "⚠️ Doit correspondre au code de l'influenceur pour le suivi."
+        : "Utilisez un code unique pour cette promotion interne."}
+    </p>
+  </div>
+</div>
+
+{/* Produit lié */}
+<div className="pt-2">
+  <label className="input-label">
+    Produit ciblé <span className="text-encre-muted/50 normal-case">(Optionnel)</span>
+  </label>
+  <select {...form.register("productId")} className="input-field">
+    <option value="">Toute la boutique (Global)</option>
+    {Array.isArray(products) && products.map(p => (
+      <option key={p.id} value={p.id}>{p.titre} — {p.auteur}</option>
+    ))}
+  </select>
+</div>
 
             {/* Actions */}
             <div className="flex gap-3 pt-2 border-t border-sable">

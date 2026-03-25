@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, ShoppingBag,
-  Users, Tag, ArrowLeft, Folder,
+  Users, Tag, ArrowLeft, Folder, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,8 @@ const NAV = [
   { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
   { href: "/admin/utilisateurs", label: "Utilisateurs",  icon: Users },
   { href: "/admin/promotions",   label: "Promotions",    icon: Tag },
+    { href: "/admin/influenceur",   label: "influenceurs",    icon: Crown },
+
 ];
 
 interface Props {

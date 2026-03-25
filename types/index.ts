@@ -38,6 +38,19 @@ export interface AuthResponse {
   nouveauCompte: boolean;
 }
 
+// types/influenceur.ts (ou directement dans votre composant)
+export interface InfluenceurStats {
+  id: number;
+  userId: number;
+  userNom: string;
+  userEmail: string;
+  codePromo: string;
+  commission: number;
+  totalVentes: number;
+  nbCommandes: number;
+  commissionGagnee: number;
+  nbPromosActives: number;
+}
 // ── Utilisateur ───────────────────────────────────────────────────────────────
 export interface User {
   id: number;

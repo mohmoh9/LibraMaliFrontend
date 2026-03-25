@@ -33,6 +33,33 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<"adresse" | "paiement" | "confirmation">("adresse");
   const [orderId, setOrderId] = useState<number | null>(null);
 
+  const [promoInfo, setPromoInfo] = useState<{ code: string; pourcentage: number } | null>(null);
+const [applyingPromo, setApplyingPromo] = useState(false);
+
+// Calcul du montant de la réduction et du total final
+// Utilise l'optional chaining (?.) et une valeur par défaut (0)
+const totalCart = cart?.total || 0;
+const reduction = promoInfo ? (totalCart * promoInfo.pourcentage) / 100 : 0;
+const totalFinal = totalCart - reduction;
+const handleApplyPromo = async () => {
+  if (!codePromo.trim()) return;
+  setApplyingPromo(true);
+  try {
+    // Supposons que ton backend ait un endpoint GET /promotions/valider?code=...
+    const { data } = await api.get(`/promotions/valider`, { params: { code: codePromo.trim() } });
+    setPromoInfo({
+      code: data.data.code,
+      pourcentage: data.data.pourcentage
+    });
+    toast.success(`Code promo appliqué : -${data.data.pourcentage}%`);
+  } catch (err) {
+    setPromoInfo(null);
+    toast.error("Code promo invalide ou expiré.");
+  } finally {
+    setApplyingPromo(false);
+  }
+};
+
   useEffect(() => {
     if (!isAuthenticated) { router.push("/login"); return; }
     fetchCart();
@@ -183,16 +210,31 @@ export default function CheckoutPage() {
                 ))
               )}
 
-              {/* Code promo optionnel */}
-              <div className="mt-4">
-                <label className="input-label">Code promo (optionnel)</label>
-                <input
-                  value={codePromo}
-                  onChange={(e) => setCodePromo(e.target.value.toUpperCase())}
-                  placeholder="EX: LIRE20"
-                  className="input-field max-w-xs"
-                />
-              </div>
+{/* ── Section Code Promo dans l'étape Adresse ── */}
+<div className="mt-6 p-4 bg-sable/30 rounded-xl border border-sable">
+  <label className="input-label">Un code promo ?</label>
+  <div className="flex gap-2 mt-1">
+    <input
+      value={codePromo}
+      onChange={(e) => setCodePromo(e.target.value.toUpperCase())}
+      placeholder="EX: LIRE20"
+      className="input-field max-w-[200px]"
+    />
+    <button 
+      type="button"
+      onClick={handleApplyPromo}
+      disabled={applyingPromo || !codePromo}
+      className="btn-secondary text-sm py-2"
+    >
+      {applyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Appliquer"}
+    </button>
+  </div>
+  {promoInfo && (
+    <p className="text-xs text-success font-medium mt-2 flex items-center gap-1">
+      <CheckCircle className="w-3 h-3" /> Promotion {promoInfo.code} appliquée (-{promoInfo.pourcentage}%)
+    </p>
+  )}
+</div>
 
               <button
                 onClick={() => setStep("paiement")}
@@ -258,26 +300,48 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* ── Résumé de commande ─────────────────────────────────────── */}
-        <div className="card p-5 space-y-4 h-fit">
-          <h3 className="font-display font-bold text-encre">Votre commande</h3>
-          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-            {cart.items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm font-body">
-                <span className="text-encre-muted truncate flex-1 mr-2">
-                  {item.productTitre} ×{item.quantite}
-                </span>
-                <span className="text-encre shrink-0">{formatPrix(item.sousTotal)}</span>
-              </div>
-            ))}
-          </div>
-          <div className="border-t border-sable pt-3 flex justify-between">
-            <span className="font-display font-bold text-encre">Total</span>
-            <span className="font-display font-bold text-xl text-encre">
-              {formatPrix(cart.total)}
-            </span>
-          </div>
-        </div>
+{/* ── Résumé de commande mis à jour ── */}
+<div className="card p-5 space-y-4 h-fit sticky top-24">
+  <h3 className="font-display font-bold text-encre border-b border-sable pb-2">Votre commande</h3>
+  <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+    {cart.items.map((item) => (
+      <div key={item.id} className="flex justify-between text-sm font-body">
+        <span className="text-encre-muted truncate flex-1 mr-2">
+          {item.productTitre} <span className="text-[10px]">×{item.quantite}</span>
+        </span>
+        <span className="text-encre shrink-0">{formatPrix(item.sousTotal)}</span>
+      </div>
+    ))}
+  </div>
+
+  <div className="space-y-2 pt-3 border-t border-sable">
+    <div className="flex justify-between text-sm font-body text-encre-muted">
+      <span>Sous-total</span>
+      <span>{formatPrix(cart.total)}</span>
+    </div>
+    
+    {promoInfo && (
+      <div className="flex justify-between text-sm font-body text-success">
+        <span>Réduction ({promoInfo.code})</span>
+        <span>-{formatPrix(reduction)}</span>
+      </div>
+    )}
+
+    <div className="flex justify-between pt-2">
+      <span className="font-display font-bold text-encre">Total à payer</span>
+      <div className="text-right">
+        <span className="font-display font-bold text-xl text-encre block">
+          {formatPrix(totalFinal)}
+        </span>
+        {promoInfo && (
+          <span className="text-[10px] text-encre-muted line-through">
+            {formatPrix(cart.total)}
+          </span>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   );

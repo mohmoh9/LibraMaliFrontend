@@ -12,7 +12,63 @@ import { formatDate, cn } from "@/lib/utils";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminGuard from "@/components/admin/AdminGuard";
 import type { User as UserType, Role, PageResponse } from "@/types";
+// ... tes imports existants
+import { useForm } from "react-hook-form"; // Optionnel, ou utilise des states
 
+/* ── Modale Influenceur ────────────────────────────────────────────────── */
+function InfluenceurModal({ 
+  user, 
+  onClose, 
+  onConfirm 
+}: { 
+  user: UserType; 
+  onClose: () => void; 
+  onConfirm: (data: { codePromo: string; commission: number }) => void 
+}) {
+  const [code, setCode] = useState("");
+  const [comm, setComm] = useState(10);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-encre/40 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-float border border-sable">
+        <h3 className="font-display text-xl font-bold text-encre mb-1">Promouvoir {user.nom}</h3>
+        <p className="text-xs text-encre-muted mb-6">Un profil influenceur sera créé avec les paramètres suivants.</p>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-encre-muted mb-1.5 block">Code Promo unique</label>
+            <input 
+              className="input-field uppercase" 
+              placeholder="EX: MALI20" 
+              value={code} 
+              onChange={e => setCode(e.target.value.toUpperCase())}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-encre-muted mb-1.5 block">Commission (%)</label>
+            <input 
+              type="number" 
+              className="input-field" 
+              value={comm} 
+              onChange={e => setComm(Number(e.target.value))}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-8">
+          <button onClick={onClose} className="btn-secondary flex-1">Annuler</button>
+          <button 
+            disabled={!code || code.length < 3}
+            onClick={() => onConfirm({ codePromo: code, commission: comm })} 
+            className="btn-primary flex-1 bg-or border-or hover:bg-or-dark"
+          >
+            Confirmer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 /* ── Config rôles ───────────────────────────────────────────────────────── */
 const ROLE_CONFIG: Record<Role, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
   CLIENT:      { label: "Client",      icon: <User className="w-3 h-3" />,       color: "text-encre-muted", bg: "bg-sable" },
@@ -55,6 +111,7 @@ export default function AdminUtilisateursPage() {
   const [totalEls,   setTotalEls]   = useState(0);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [loadingId,  setLoadingId]  = useState<number | null>(null);
+  const [promotingUser, setPromotingUser] = useState<UserType | null>(null);
 
   /* ── Chargement ─────────────────────────────────────────────────────── */
   const fetchUsers = useCallback(async () => {
@@ -84,16 +141,57 @@ export default function AdminUtilisateursPage() {
 
   /* ── Changement de rôle ─────────────────────────────────────────────── */
 const handleRoleChange = async (userId: number, newRole: Role) => {
-  setLoadingId(userId);
+  if (newRole === "INFLUENCEUR") {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      setPromotingUser(user);
+      setOpenMenuId(null); // IMPORTANT : Fermer le dropdown immédiatement
+    }
+    return;
+  }
+
+    // Sinon, changement de rôle classique (Admin <-> Client)
+setLoadingId(userId);
   setOpenMenuId(null);
   try {
-    // Le backend renverra une erreur 403 si userId est l'ID de l'admin actuel
     await api.patch(`/users/${userId}/role`, { role: newRole });
     setUsers(us => us.map(u => u.id === userId ? { ...u, role: newRole } : u));
     toast.success("Rôle mis à jour !");
   } catch (err) {
-    // Le message "Vous ne pouvez pas modifier votre propre rôle" sera affiché ici
-    toast.error(getErrorMessage(err)); 
+    toast.error(getErrorMessage(err));
+  } finally {
+    setLoadingId(null);
+  }
+};
+
+  /* Nouveau : Création du profil influenceur */
+const confirmPromotion = async (data: { codePromo: string; commission: number }) => {
+  if (!promotingUser) return;
+  
+  // Validation locale simple avant envoi
+  if (!data.codePromo.trim()) {
+    toast.error("Le code promo est requis.");
+    return;
+  }
+
+  const targetId = promotingUser.id;
+  setLoadingId(targetId);
+  setPromotingUser(null); // Ferme la modale immédiatement pour feedback UI
+
+  try {
+    await api.post("/influenceurs", {
+      userId: targetId,
+      codePromo: data.codePromo.trim().toUpperCase(),
+      commission: data.commission || 10 // Valeur par défaut si 0 ou null
+    });
+    
+    // Mettre à jour la liste locale
+    setUsers(us => us.map(u => u.id === targetId ? { ...u, role: "INFLUENCEUR" } : u));
+    toast.success(`${promotingUser.nom} est désormais Influenceur !`);
+  } catch (err) {
+    toast.error(getErrorMessage(err));
+    // Optionnel : re-fetcher les users en cas d'erreur pour resynchroniser l'UI
+    fetchUsers();
   } finally {
     setLoadingId(null);
   }
@@ -322,6 +420,15 @@ const handleRoleChange = async (userId: number, newRole: Role) => {
         {/* Fermer le menu en cliquant ailleurs */}
         {openMenuId !== null && (
           <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+        )}
+
+        {/* Ajout de la modale à la fin du JSX */}
+        {promotingUser && (
+          <InfluenceurModal 
+            user={promotingUser} 
+            onClose={() => setPromotingUser(null)} 
+            onConfirm={confirmPromotion} 
+          />
         )}
       </AdminLayout>
     </AdminGuard>
