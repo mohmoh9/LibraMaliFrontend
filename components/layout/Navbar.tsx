@@ -153,14 +153,18 @@ export default function Navbar() {
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl
                                 shadow-float border border-sable py-2 opacity-0 invisible
                                 group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div>
                   {role === "ADMIN" && (
                     <Link href="/admin/dashboard" className="dropdown-item">
                       Dashboard admin
                     </Link>
                   )}
+                  </div>
+                  <div>
                   <Link href="/mon-compte/commandes" className="dropdown-item">
                     Mes commandes
                   </Link>
+                  </div>
                   <Link href="/mon-compte/profil" className="dropdown-item">
                     Mon profil
                   </Link>

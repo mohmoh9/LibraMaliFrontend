@@ -13,6 +13,8 @@ import api from "@/lib/api";
 import { formatPrix, formatDate, statutCommandeLabel, statutCommandeColor } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
 import type { Order, OrderStats, PageResponse } from "@/types";
+import AdminGuard from "@/components/admin/AdminGuard";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 const NAV_ADMIN = [
   { href: "/admin/dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -21,6 +23,19 @@ const NAV_ADMIN = [
   { href: "/admin/utilisateurs", label: "Utilisateurs", icon: <Users className="w-4 h-4" /> },
   { href: "/admin/promotions", label: "Promotions", icon: <Tag className="w-4 h-4" /> },
 ];
+
+/* ── Skeleton ligne tableau ─────────────────────────────────────────────── */
+function SkeletonRow() {
+  return (
+    <tr>
+      {[40, 200, 120, 80, 80, 100, 80].map((w, i) => (
+        <td key={i} className="px-4 py-3">
+          <div className="skeleton h-4 rounded" style={{ width: w }} />
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -53,37 +68,9 @@ export default function AdminDashboard() {
   if (!isAuthenticated || role !== "ADMIN") return null;
 
   return (
+    <AdminGuard>
+      <AdminLayout>
     <div className="flex min-h-screen">
-
-      {/* ── Sidebar admin ─────────────────────────────────────────────── */}
-      <aside className="hidden lg:flex flex-col w-60 bg-encre text-ivoire shrink-0 sticky top-16 h-[calc(100vh-4rem)]">
-        <div className="p-6 border-b" style={{ borderColor: "#2D2A26" }}>
-          <p className="font-body text-xs uppercase tracking-widest" style={{ color: "#6B6560" }}>
-            Administration
-          </p>
-          <p className="font-display font-semibold mt-1">LibraMali</p>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {NAV_ADMIN.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-body
-                         transition-colors hover:bg-white/10"
-              style={{ color: "#C4BFB9" }}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t" style={{ borderColor: "#2D2A26" }}>
-          <Link href="/" className="flex items-center gap-2 text-xs font-body"
-            style={{ color: "#6B6560" }}>
-            ← Retour au site
-          </Link>
-        </div>
-      </aside>
 
       {/* ── Contenu principal ─────────────────────────────────────────── */}
       <main className="flex-1 p-6 lg:p-10 bg-ivoire overflow-auto">
@@ -227,5 +214,7 @@ export default function AdminDashboard() {
         )}
       </main>
     </div>
+          </AdminLayout>
+      </AdminGuard>
   );
 }

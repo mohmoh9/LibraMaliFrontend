@@ -1,157 +1,215 @@
-// src/app/(main)/page.tsx
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Star, Truck, Shield, BookOpen } from "lucide-react";
+import { 
+  ArrowRight, Star, Truck, Shield, BookOpen, 
+  ShoppingBag, Sparkles, Flame, ChevronRight 
+} from "lucide-react";
+import api from "@/lib/api";
+import type { Product, Category } from "@/types";
+import { toast } from "sonner";
 
 export default function HomePage() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadHomeData = async () => {
+      try {
+        const [prodRes, catRes] = await Promise.all([
+          api.get("/products?limit=4"), // On récupère les 4 derniers
+          api.get("/categories")
+        ]);
+        setFeaturedProducts(prodRes.data.data.content || []);
+        setCategories(catRes.data.data || []);
+      } catch (err) {
+        console.error("Erreur chargement accueil", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHomeData();
+  }, []);
+
   return (
-    <div className="overflow-hidden">
+    <div className="bg-ivoire min-h-screen">
+      
+      {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden pt-16 pb-24 lg:pt-24 lg:pb-32">
+        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[800px] h-[800px] bg-or/5 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-encre text-ivoire rounded-full text-xs font-bold tracking-widest uppercase">
+                <Sparkles className="w-3 h-3 text-or" />
+                Librairie Numérique du Mali
+              </div>
+              
+              <h1 className="font-display text-6xl lg:text-8xl font-black text-encre leading-none tracking-tighter">
+                Libérez votre <br />
+                <span className="text-or">imagination.</span>
+              </h1>
+              
+              <p className="text-xl text-encre-muted font-body max-w-md leading-relaxed">
+                Le plus large catalogue de littérature africaine et internationale, livré chez vous à Bamako en 24h.
+              </p>
 
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="relative min-h-[90vh] flex items-center bg-ivoire">
-        {/* Motif décoratif */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full
-                          bg-gradient-to-br from-or/10 to-sable/40 blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full
-                          bg-or/5 blur-2xl" />
-          {/* Grille typographique décorative */}
-          <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:block
-                          text-[180px] font-display font-bold text-sable/50 leading-none
-                          select-none tracking-tighter">
-            LIRE
-          </div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-or/10 rounded-full">
-              <Star className="w-3.5 h-3.5 text-or fill-or" />
-              <span className="text-xs font-medium text-or">Nouvelle collection disponible</span>
-            </div>
-
-            <h1 className="font-display text-5xl sm:text-6xl lg:text-display-xl font-bold text-encre leading-[1.08] tracking-tight">
-              La culture à portée de{" "}
-              <span className="relative inline-block">
-                main
-                <span className="absolute -bottom-1 left-0 w-full h-1 bg-or rounded-full" />
-              </span>
-            </h1>
-
-            <p className="font-body text-lg text-encre-muted leading-relaxed max-w-lg">
-              Des milliers de livres soigneusement sélectionnés, livrés directement chez vous au Mali.
-              Découvrez la littérature africaine et internationale.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <Link href="/catalogue" className="btn-primary px-8 py-3.5 text-base">
-                Explorer le catalogue
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link href="/login" className="btn-secondary px-8 py-3.5 text-base">
-                Se connecter
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-8 pt-4">
-              {[
-                { val: "5 000+", label: "Titres disponibles" },
-                { val: "4.8★", label: "Note moyenne" },
-                { val: "48h", label: "Livraison rapide" },
-              ].map((s) => (
-                <div key={s.label}>
-                  <div className="font-display text-2xl font-bold text-encre">{s.val}</div>
-                  <div className="text-xs text-encre-muted font-body">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Illustration — empilage de "livres" stylisés */}
-          <div className="hidden lg:flex items-center justify-center relative h-[480px] animate-slide-up animate-delay-200">
-            {[
-              { color: "#C9A84C", rotate: "-8deg", top: "60px", left: "40px", z: 10 },
-              { color: "#1A1814", rotate: "4deg", top: "30px", left: "120px", z: 20 },
-              { color: "#E8E0D0", rotate: "-2deg", top: "80px", left: "200px", z: 15 },
-              { color: "#C9A84C", rotate: "6deg", top: "20px", left: "270px", z: 5 },
-            ].map((book, i) => (
-              <div
-                key={i}
-                className="absolute w-28 h-72 rounded-lg shadow-float transition-transform hover:-translate-y-2"
-                style={{
-                  backgroundColor: book.color,
-                  transform: `rotate(${book.rotate})`,
-                  top: book.top,
-                  left: book.left,
-                  zIndex: book.z,
-                }}
-              >
-                <div className="absolute bottom-6 left-3 right-3">
-                  <div className="w-full h-0.5 bg-white/20 mb-2" />
-                  <div className="w-2/3 h-0.5 bg-white/20" />
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/catalogue" className="btn-primary group h-14 px-8 text-lg">
+                  Acheter maintenant
+                  <ShoppingBag className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                </Link>
+                <div className="flex -space-x-3 items-center ml-2">
+                   {[1,2,3,4].map(i => (
+                     <div key={i} className="w-10 h-10 rounded-full border-2 border-ivoire bg-sable flex items-center justify-center text-[10px] font-bold">
+                       {i}k+
+                     </div>
+                   ))}
+                   <p className="ml-6 text-xs font-bold text-encre-muted uppercase tracking-widest">Lecteurs actifs au Mali</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Visuel Impactant */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-or rounded-[3rem] rotate-3 scale-95 opacity-20 blur-xl group-hover:rotate-6 transition-transform" />
+              <div className="relative aspect-[4/5] bg-sable rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white">
+                <img 
+                  src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80" 
+                  alt="Reading" 
+                  className="object-cover w-full h-full grayscale-[20%] group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute bottom-8 left-8 right-8 p-6 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg">
+                  <p className="font-display font-bold text-encre text-lg italic">"Un livre est un jardin que l'on porte dans sa poche."</p>
+                  <p className="text-or text-sm font-bold mt-2">— Proverbe Africain</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── VALEURS ──────────────────────────────────────────────────────── */}
-      <section className="bg-white py-16 border-y border-sable">
+      {/* ── PARCOURIR PAR CATÉGORIES ────────────────────────────────────── */}
+      <section className="py-16 bg-white border-y border-sable/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Truck className="w-5 h-5" />,
-                titre: "Livraison rapide",
-                texte: "Réception en 24 à 48h dans les grandes villes du Mali",
-              },
-              {
-                icon: <Shield className="w-5 h-5" />,
-                titre: "Paiement sécurisé",
-                texte: "Cash, Mobile Money ou carte bancaire en toute sécurité",
-              },
-              {
-                icon: <BookOpen className="w-5 h-5" />,
-                titre: "Catalogue riche",
-                texte: "Littérature africaine, scolaire, académique et internationale",
-              },
-            ].map((item) => (
-              <div key={item.titre} className="flex items-start gap-4 p-6 rounded-2xl hover:bg-ivoire transition-colors">
-                <div className="w-10 h-10 bg-or/10 rounded-xl flex items-center justify-center text-or shrink-0">
-                  {item.icon}
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-black text-encre tracking-tight">Nos Rayons</h2>
+              <p className="text-encre-muted font-medium">Trouvez votre prochain coup de cœur par genre</p>
+            </div>
+            <Link href="/catalogue" className="text-or font-bold flex items-center gap-1 hover:underline">
+              Tout voir <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {categories.slice(0, 6).map((cat) => (
+              <Link 
+                key={cat.id} 
+                href={`/catalogue?category=${cat.id}`}
+                className="group p-6 bg-ivoire rounded-3xl border border-transparent hover:border-or/30 hover:shadow-xl hover:shadow-or/5 transition-all text-center"
+              >
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:scale-110 transition-transform">
+                  <BookOpen className="w-6 h-6 text-or" />
                 </div>
-                <div>
-                  <h3 className="font-display font-semibold text-encre mb-1">{item.titre}</h3>
-                  <p className="text-sm text-encre-muted font-body leading-relaxed">{item.texte}</p>
-                </div>
-              </div>
+                <span className="font-bold text-encre group-hover:text-or transition-colors">{cat.nom}</span>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA FINAL ─────────────────────────────────────────────────────── */}
-      <section className="py-24 bg-encre text-ivoire">
-        <div className="max-w-3xl mx-auto text-center px-4 space-y-6">
-          <h2 className="font-display text-display-md font-bold leading-tight">
-            Prêt à explorer notre bibliothèque ?
-          </h2>
-          <p className="font-body text-base leading-relaxed" style={{ color: "#9B9590" }}>
-            Créez votre compte gratuitement et commencez à commander vos livres en quelques clics.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/catalogue" className="btn-gold px-8 py-3.5">
-              Voir le catalogue <ArrowRight className="w-4 h-4" />
-            </Link>
-            <Link href="/login"
-              className="btn-secondary px-8 py-3.5"
-              style={{ borderColor: "#2D2A26", color: "#EDE8DF" }}>
-              Se connecter
-            </Link>
+      {/* ── PRODUITS VEDETTES ───────────────────────────────────────────── */}
+      <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-or rounded-2xl flex items-center justify-center text-white shadow-lg shadow-or/20">
+              <Flame className="w-6 h-6 animate-pulse" />
+            </div>
+            <h2 className="text-4xl font-black text-encre tracking-tight">Les Incontournables</h2>
+          </div>
+          <div className="flex gap-2">
+            <div className="px-4 py-2 bg-sable/30 rounded-full text-xs font-black uppercase tracking-widest text-encre-muted">Populaires cette semaine</div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[1,2,3,4].map(i => <div key={i} className="aspect-[3/4] bg-sable/20 animate-pulse rounded-3xl" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((product) => (
+              <div key={product.id} className="group bg-white p-4 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-500 border border-transparent hover:border-sable/20 relative">
+                {/* Badge Promotion ou Nouveau */}
+                <div className="absolute top-6 left-6 z-10 bg-or text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter shadow-lg">
+                  Best-Seller
+                </div>
+                
+                <div className="aspect-[3/4] rounded-[2rem] overflow-hidden mb-6 bg-sable/10">
+                  <img 
+                    src={product.imageUrl || "/placeholder-book.jpg"} 
+                    alt={product.titre}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  />
+                </div>
+                
+                <div className="space-y-2 px-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-or">{product.categorie?.nom}</p>
+                  <h3 className="font-display font-bold text-encre text-lg leading-tight line-clamp-1 group-hover:text-or transition-colors">
+                    {product.titre}
+                  </h3>
+                  <p className="text-sm text-encre-muted italic">{product.auteur}</p>
+                  
+                  <div className="flex items-center justify-between pt-4">
+                    <span className="text-2xl font-black text-encre">{product.prix} FCFA</span>
+                    <button className="w-12 h-12 bg-encre text-white rounded-2xl flex items-center justify-center hover:bg-or transition-all active:scale-90 shadow-lg">
+                      <ShoppingBag className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ── REASSURANCE (CONFIANCE) ──────────────────────────────────────── */}
+      <section className="bg-encre py-20 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-12 relative z-10">
+          <div className="flex gap-6 items-center">
+             <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                <Truck className="w-8 h-8 text-or" />
+             </div>
+             <div>
+               <h4 className="text-ivoire font-bold text-lg">Livraison Bamako</h4>
+               <p className="text-ivoire/40 text-sm">Chez vous en moins de 24h chrono.</p>
+             </div>
+          </div>
+          <div className="flex gap-6 items-center">
+             <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                <Shield className="w-8 h-8 text-or" />
+             </div>
+             <div>
+               <h4 className="text-ivoire font-bold text-lg">Paiement Local</h4>
+               <p className="text-ivoire/40 text-sm">Orange Money, Moov ou Espèces.</p>
+             </div>
+          </div>
+          <div className="flex gap-6 items-center">
+             <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                <Star className="w-8 h-8 text-or" />
+             </div>
+             <div>
+               <h4 className="text-ivoire font-bold text-lg">Qualité Garantie</h4>
+               <p className="text-ivoire/40 text-sm">Des livres neufs et originaux uniquement.</p>
+             </div>
           </div>
         </div>
       </section>
+      
     </div>
   );
 }

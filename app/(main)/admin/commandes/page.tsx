@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import api, { getErrorMessage } from "@/lib/api";
 import { formatPrix, formatDate, statutCommandeLabel, statutCommandeColor } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
+import AdminLayout from "@/components/admin/AdminLayout";
+import AdminGuard from "@/components/admin/AdminGuard";
 import type { Order, PageResponse } from "@/types";
 
 type StatutCommande = "EN_ATTENTE" | "CONFIRMEE" | "EXPEDIEE" | "LIVREE" | "ANNULEE";
@@ -81,33 +83,9 @@ export default function AdminCommandesPage() {
   if (!isAuthenticated || role !== "ADMIN") return null;
 
   return (
+          <AdminGuard>
+            <AdminLayout>
     <div className="flex min-h-screen bg-ivoire">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-encre text-ivoire shrink-0 sticky top-16 h-[calc(100vh-4rem)]">
-        <div className="p-6 border-b" style={{ borderColor: "#2D2A26" }}>
-          <p className="font-body text-xs uppercase tracking-widest" style={{ color: "#6B6560" }}>Administration</p>
-          <p className="font-display font-semibold mt-1">LibraMali</p>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {[
-            { href: "/admin/dashboard", label: "Dashboard" },
-            { href: "/admin/produits", label: "Produits" },
-            { href: "/admin/commandes", label: "Commandes" },
-            { href: "/admin/utilisateurs", label: "Utilisateurs" },
-            { href: "/admin/promotions", label: "Promotions" },
-          ].map(item => (
-            <Link key={item.href} href={item.href}
-              className="block px-3 py-2.5 rounded-xl text-sm font-body transition-colors hover:bg-white/10"
-              style={{ color: item.href.includes("commandes") ? "#F7F4EF" : "#C4BFB9",
-                       background: item.href.includes("commandes") ? "rgba(255,255,255,0.1)" : "" }}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-4 border-t" style={{ borderColor: "#2D2A26" }}>
-          <Link href="/" className="text-xs font-body" style={{ color: "#6B6560" }}>← Retour au site</Link>
-        </div>
-      </aside>
 
       <main className="flex-1 p-6 lg:p-10">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -222,5 +200,7 @@ export default function AdminCommandesPage() {
         )}
       </main>
     </div>
+          </AdminLayout>
+          </AdminGuard>
   );
 }

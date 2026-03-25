@@ -38,15 +38,21 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ cart: data.data });
   },
 
-  removeItem: async (itemId) => {
-    const { data } = await api.delete(`/cart/items/${itemId}`);
+removeItem: async (itemId) => {
+    await api.delete(`/cart/items/${itemId}`);
+    // Au lieu de faire confiance au retour du DELETE, on refresh proprement
+    const { data } = await api.get("/cart");
     set({ cart: data.data });
   },
 
-  clearCart: async () => {
-    await api.delete("/cart/clear");
-    set({ cart: null });
-    get().fetchCart();
+clearCart: async () => {
+    try {
+      await api.delete("/cart/clear");
+      // On met à jour localement immédiatement pour une UI réactive
+      set({ cart: { items: [], total: 0, nombreArticles: 0 } as unknown as Cart });
+    } catch (error) {
+      console.error("Erreur clearCart", error);
+    }
   },
 
   previewPromo: async (code) => {

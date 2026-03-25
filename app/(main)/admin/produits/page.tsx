@@ -113,7 +113,7 @@ export default function AdminProduitsPage() {
       auteur:      p.auteur,
       prix:        p.prix,
       stock:       p.stock,
-      categoryId:  p.category?.id,
+      categoryId:  p.categoryId,
       description: p.description ?? "",
       imageUrl:    p.imageUrl ?? "",
     });
@@ -284,7 +284,7 @@ export default function AdminProduitsPage() {
                           {/* Catégorie */}
                           <td className="px-4 py-3">
                             <span className="text-xs px-2 py-1 bg-sable rounded-full text-encre-muted">
-                              {p.category?.nom ?? "—"}
+                              {p.categoryNom ?? "—"}
                             </span>
                           </td>
 

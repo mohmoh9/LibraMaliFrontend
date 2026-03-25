@@ -4,12 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, ShoppingBag,
-  Users, Tag, ArrowLeft,
+  Users, Tag, ArrowLeft, Folder,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin/dashboard",    label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/admin/categories",   label: "Categories",    icon: Folder },
   { href: "/admin/produits",     label: "Produits",      icon: BookOpen },
   { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
   { href: "/admin/utilisateurs", label: "Utilisateurs",  icon: Users },
