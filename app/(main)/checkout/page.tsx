@@ -333,49 +333,87 @@ const handleApplyPromo = async () => {
           )}
         </div>
 
-{/* ── Résumé de commande mis à jour ── */}
-<div className="card p-5 space-y-4 h-fit sticky top-24 bg-encre/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
-  <h3 className="font-display font-bold text-white border-b border-white/10 pb-2">Votre commande</h3>
+{/* ── Résumé de commande (Adapté au style Récapitulatif Slate/Amber) ── */}
+<div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/10 space-y-6 relative overflow-hidden border border-white/5">
   
-  <div className="space-y-3 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
-    {cart.items.map((item) => (
-      <div key={item.id} className="flex justify-between text-sm font-body">
-        <span className="text-white/70 truncate flex-1 mr-2">
-          {item.productTitre} <span className="text-[10px] opacity-50">×{item.quantite}</span>
-        </span>
-        <span className="text-white font-medium">{formatPrix(item.sousTotal)}</span>
-      </div>
-    ))}
+  <div className="relative z-10">
+    <h3 className="text-xl font-bold flex items-center gap-2">
+      <span className="w-1.5 h-6 bg-amber-500 rounded-full" /> 
+      Votre commande
+    </h3>
+    
+    {/* Zone de liste des produits avec scrollbar personnalisée */}
+    <div className="mt-6 space-y-4 max-h-80 overflow-y-auto pr-3 custom-scrollbar">
+      {cart.items.map((item) => (
+        <div key={item.id} className="group flex justify-between items-start gap-4 p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-slate-100 truncate">
+              {item.productTitre}
+            </p>
+            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+              Quantité : {item.quantite}
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-sm font-bold text-amber-400">
+              {formatPrix(item.sousTotal)}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
   </div>
 
-  <div className="space-y-2 pt-3 border-t border-white/10">
-    <div className="flex justify-between text-sm font-body text-white/60">
+  {/* Section Calculs (Sous-total & Réduction) */}
+  <div className="space-y-3 pt-6 border-t border-white/10 relative z-10">
+    <div className="flex justify-between items-center text-xs font-medium text-slate-400 uppercase tracking-widest">
       <span>Sous-total</span>
-      <span>{formatPrix(cart.total)}</span>
+      <span className="text-slate-200">{formatPrix(cart.total)}</span>
     </div>
     
     {promoInfo && (
-      <div className="flex justify-between text-sm font-body text-orange-400">
-        <span>Réduction ({promoInfo.code})</span>
+      <div className="flex justify-between items-center text-xs font-bold text-amber-400 animate-in slide-in-from-right-2">
+        <span>Code Promo ({promoInfo.code})</span>
         <span>-{formatPrix(reduction)}</span>
       </div>
     )}
 
-    <div className="flex justify-between pt-2">
-      <span className="font-display font-bold text-white">Total à payer</span>
+    {/* Ligne Total Final */}
+    <div className="flex justify-between items-end pt-4 border-t border-white/10">
+      <span className="text-lg font-bold">Total à payer</span>
       <div className="text-right">
-        <span className="font-display font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 block">
+        <span className="text-3xl font-black text-amber-500 block leading-none drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
           {formatPrix(totalFinal)}
         </span>
         {promoInfo && (
-          <span className="text-[10px] text-white/40 line-through">
+          <span className="text-[10px] text-slate-500 line-through mt-1 block">
             {formatPrix(cart.total)}
           </span>
         )}
       </div>
     </div>
   </div>
+
+  {/* Bouton de Téléchargement du Devis */}
+  <div className="pt-4 relative z-10">
+    <button 
+      onClick={handleDevis} 
+      disabled={devisLoading}
+      className="group flex items-center justify-center gap-3 w-full bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white h-14 rounded-2xl text-xs font-black transition-all border border-white/5 hover:border-amber-500/30 active:scale-95 disabled:opacity-50"
+    >
+      {devisLoading ? (
+        <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+      ) : (
+        <FileText className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
+      )}
+      <span>{devisLoading ? "PRÉPARATION DU PDF..." : "TÉLÉCHARGER LE DEVIS (PDF)"}</span>
+    </button>
   </div>
+
+  {/* Effets Visuels (Glow & Gradient) */}
+  <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+</div>
       </div>
     </div>
   );

@@ -229,7 +229,10 @@ const handleRemove = async (itemId: number) => {
         {/* ── Récapitulatif de la commande ─────────────────────────────────── */}
         <div className="space-y-6">
           <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200 space-y-8 relative overflow-hidden">
-            <h2 className="text-xl font-bold">Récapitulatif</h2>
+    <h2 className="text-xl font-bold flex items-center gap-2">
+            <span className="w-1.5 h-6 bg-amber-500 rounded-full" /> 
+              Récapitulatif
+            </h2>
           
 
             {/* Détails des prix */}
