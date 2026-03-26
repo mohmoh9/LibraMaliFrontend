@@ -158,7 +158,7 @@ export default function HomePage() {
                 </div>
                 
                 <div className="space-y-2 px-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-or">{product.categorie?.nom}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-or">{product.categoryNom}</p>
                   <h3 className="font-display font-bold text-encre text-lg leading-tight line-clamp-1 group-hover:text-or transition-colors">
                     {product.titre}
                   </h3>

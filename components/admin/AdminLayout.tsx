@@ -4,18 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, ShoppingBag,
-  Users, Tag, ArrowLeft, Folder, Crown,
+  Users, Tag, ArrowLeft, Folder, Crown, Star, Heart,
+  DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin/dashboard",    label: "Dashboard",     icon: LayoutDashboard },
+  { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
+  { href: "/admin/paiement",     label: "Paiement",      icon: DollarSign },
   { href: "/admin/categories",   label: "Categories",    icon: Folder },
   { href: "/admin/produits",     label: "Produits",      icon: BookOpen },
-  { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
   { href: "/admin/utilisateurs", label: "Utilisateurs",  icon: Users },
   { href: "/admin/promotions",   label: "Promotions",    icon: Tag },
-    { href: "/admin/influenceur",   label: "influenceurs",    icon: Crown },
+  { href: "/admin/influenceur",  label: "influenceurs",  icon: Crown },
+  { href: "/admin/avis",         label: "Avis",          icon: Star },
+  { href: "/admin/favoris",      label: "Favoris",       icon: Heart },
+
 
 ];
 

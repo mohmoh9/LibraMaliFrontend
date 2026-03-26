@@ -73,26 +73,7 @@ const handleRemove = async (itemId: number) => {
     }
   };
 
-  const handleDevis = async () => {
-    setDevisLoading(true);
-    try {
-      const res = await api.post("/devis/panier",
-        { codePromo: promoPreview?.codePromoApplique },
-        { responseType: "blob" }
-      );
-      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const a = document.createElement("a"); 
-      a.href = url;
-      a.download = `devis_panier_${Date.now()}.pdf`; 
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Devis généré !");
-    } catch {
-      toast.error("Impossible de générer le devis.");
-    } finally {
-      setDevisLoading(false);
-    }
-  };
+
 
   const displayCart = promoPreview ?? cart;
   const totalFinal = displayCart?.totalApresReduction ?? displayCart?.total ?? 0;
@@ -249,33 +230,12 @@ const handleRemove = async (itemId: number) => {
         <div className="space-y-6">
           <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200 space-y-8 relative overflow-hidden">
             <h2 className="text-xl font-bold">Récapitulatif</h2>
-            
-            {/* Code Promo Input */}
-            <div className="space-y-3 relative z-10">
-              <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Bon de réduction</label>
-              <div className="flex gap-2">
-                <input
-                  value={promoCode}
-                  onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoPreview(null); }}
-                  placeholder="CODE"
-                  className="flex-1 bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder:text-white/20"
-                />
-              </div>
-              <div>    
-                <button 
-                  onClick={handlePromo} 
-                  disabled={promoLoading || !promoCode.trim()}
-                  className="bg-amber-500 hover:bg-amber-400 disabled:bg-slate-700 text-slate-900 p-3 rounded-xl transition-all shadow-lg shadow-amber-500/20"
-                >
-                  {promoLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Tag className="w-5 h-5" />}
-                </button>
-                </div>
-            </div>
+          
 
             {/* Détails des prix */}
             <div className="space-y-4 pt-4 border-t border-white/10 relative z-10">
               <div className="flex justify-between items-center text-sm font-medium">
-                <span className="text-slate-400">Articles total</span>
+                <span className="text-slate-400">Sous-total</span>
                 <span>{formatPrix(cart.total)}</span>
               </div>
               
@@ -303,14 +263,6 @@ const handleRemove = async (itemId: number) => {
                 Passer la commande <ArrowRight className="w-5 h-5" />
               </Link>
               
-              <button 
-                onClick={handleDevis} 
-                disabled={devisLoading}
-                className="flex items-center justify-center gap-2 w-full bg-white/5 text-white/70 h-12 rounded-2xl text-xs font-bold hover:bg-white/10 hover:text-white transition-all border border-white/5"
-              >
-                {devisLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                Télécharger le devis (PDF)
-              </button>
             </div>
 
             {/* Décoration d'arrière-plan */}

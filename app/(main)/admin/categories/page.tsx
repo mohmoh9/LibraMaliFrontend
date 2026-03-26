@@ -194,13 +194,13 @@ export default function AdminCategoriesPage() {
                         </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-sable-dark" />
                           <span className={cn(
                             "text-xs font-medium px-2 py-0.5 rounded-full",
                             (c as any).nbProduits > 0 ? "bg-sable text-encre" : "bg-ivoire text-encre-muted"
                           )}>
                             {(c as any).nbProduits || 0}
                           </span>
+                          <p>Produits</p>
                         </div>
                       </td>
                         <td className="px-4 py-4">

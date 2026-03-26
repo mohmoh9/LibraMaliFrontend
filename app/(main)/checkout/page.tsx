@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, MapPin, CreditCard, Loader2, Plus } from "lucide-react";
+import { CheckCircle, MapPin, CreditCard, Loader2, Plus, FileText } from "lucide-react";
 import { toast } from "sonner";
 import api, { getErrorMessage } from "@/lib/api";
 import { formatPrix } from "@/lib/utils";
 import { useCartStore } from "@/store/cart.store";
 import { useAuthStore } from "@/store/auth.store";
 import type { Address } from "@/types";
+import type { Cart } from "@/types";
+
 
 type MethodePaiement = "CASH" | "MOBILE_MONEY" | "CARTE";
 
@@ -35,6 +37,11 @@ export default function CheckoutPage() {
 
   const [promoInfo, setPromoInfo] = useState<{ code: string; pourcentage: number } | null>(null);
 const [applyingPromo, setApplyingPromo] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoPreview, setPromoPreview] = useState<Cart | null>(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [devisLoading, setDevisLoading] = useState(false);
 
 // Calcul du montant de la réduction et du total final
 // Utilise l'optional chaining (?.) et une valeur par défaut (0)
@@ -59,6 +66,32 @@ const handleApplyPromo = async () => {
     setApplyingPromo(false);
   }
 };
+
+
+
+
+  const handleDevis = async () => {
+    setDevisLoading(true);
+    try {
+      const res = await api.post("/devis/panier",
+        { codePromo: promoPreview?.codePromoApplique },
+        { responseType: "blob" }
+      );
+      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const a = document.createElement("a"); 
+      a.href = url;
+      a.download = `devis_panier_${Date.now()}.pdf`; 
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Devis généré !");
+    } catch {
+      toast.error("Impossible de générer le devis.");
+    } finally {
+      setDevisLoading(false);
+    }
+  };
+
+  
 
   useEffect(() => {
     if (!isAuthenticated) { router.push("/login"); return; }
@@ -301,47 +334,48 @@ const handleApplyPromo = async () => {
         </div>
 
 {/* ── Résumé de commande mis à jour ── */}
-<div className="card p-5 space-y-4 h-fit sticky top-24">
-  <h3 className="font-display font-bold text-encre border-b border-sable pb-2">Votre commande</h3>
-  <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+<div className="card p-5 space-y-4 h-fit sticky top-24 bg-encre/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
+  <h3 className="font-display font-bold text-white border-b border-white/10 pb-2">Votre commande</h3>
+  
+  <div className="space-y-3 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
     {cart.items.map((item) => (
       <div key={item.id} className="flex justify-between text-sm font-body">
-        <span className="text-encre-muted truncate flex-1 mr-2">
-          {item.productTitre} <span className="text-[10px]">×{item.quantite}</span>
+        <span className="text-white/70 truncate flex-1 mr-2">
+          {item.productTitre} <span className="text-[10px] opacity-50">×{item.quantite}</span>
         </span>
-        <span className="text-encre shrink-0">{formatPrix(item.sousTotal)}</span>
+        <span className="text-white font-medium">{formatPrix(item.sousTotal)}</span>
       </div>
     ))}
   </div>
 
-  <div className="space-y-2 pt-3 border-t border-sable">
-    <div className="flex justify-between text-sm font-body text-encre-muted">
+  <div className="space-y-2 pt-3 border-t border-white/10">
+    <div className="flex justify-between text-sm font-body text-white/60">
       <span>Sous-total</span>
       <span>{formatPrix(cart.total)}</span>
     </div>
     
     {promoInfo && (
-      <div className="flex justify-between text-sm font-body text-success">
+      <div className="flex justify-between text-sm font-body text-orange-400">
         <span>Réduction ({promoInfo.code})</span>
         <span>-{formatPrix(reduction)}</span>
       </div>
     )}
 
     <div className="flex justify-between pt-2">
-      <span className="font-display font-bold text-encre">Total à payer</span>
+      <span className="font-display font-bold text-white">Total à payer</span>
       <div className="text-right">
-        <span className="font-display font-bold text-xl text-encre block">
+        <span className="font-display font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 block">
           {formatPrix(totalFinal)}
         </span>
         {promoInfo && (
-          <span className="text-[10px] text-encre-muted line-through">
+          <span className="text-[10px] text-white/40 line-through">
             {formatPrix(cart.total)}
           </span>
         )}
       </div>
     </div>
   </div>
-</div>
+  </div>
       </div>
     </div>
   );
