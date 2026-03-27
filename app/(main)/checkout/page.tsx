@@ -1,6 +1,6 @@
 "use client";
 // src/app/(main)/checkout/page.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, MapPin, CreditCard, Loader2, Plus, FileText } from "lucide-react";
@@ -35,30 +35,59 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<"adresse" | "paiement" | "confirmation">("adresse");
   const [orderId, setOrderId] = useState<number | null>(null);
 
-  const [promoInfo, setPromoInfo] = useState<{ code: string; pourcentage: number } | null>(null);
-const [applyingPromo, setApplyingPromo] = useState(false);
+// On utilise l'interface Promotion ou un type partiel pour autoriser productId
+const [promoInfo, setPromoInfo] = useState<{ 
+  code: string; 
+  pourcentage: number; 
+  productId?: number; 
+} | null>(null);const [applyingPromo, setApplyingPromo] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoPreview, setPromoPreview] = useState<Cart | null>(null);
   const [promoLoading, setPromoLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [devisLoading, setDevisLoading] = useState(false);
 
-// Calcul du montant de la réduction et du total final
-// Utilise l'optional chaining (?.) et une valeur par défaut (0)
-const totalCart = cart?.total || 0;
-const reduction = promoInfo ? (totalCart * promoInfo.pourcentage) / 100 : 0;
-const totalFinal = totalCart - reduction;
+// État pour stocker les infos de la promo (incluant l'ID du produit cible)
+
+// ── CALCUL CIBLÉ PAR PRODUIT ────────────────────────────────────────
+const { reduction, totalFinal } = useMemo(() => {
+  if (!cart) return { reduction: 0, totalFinal: 0 };
+  if (!promoInfo) return { reduction: 0, totalFinal: cart.total };
+
+  let totalReduction = 0;
+
+  cart.items.forEach((item) => {
+    // La promo s'applique si elle est globale (productId null) 
+    // ou si elle correspond à l'ID du produit de la ligne
+    const estEligible = !promoInfo.productId || promoInfo.productId === item.productId;
+    
+    if (estEligible) {
+      totalReduction += (item.sousTotal * promoInfo.pourcentage) / 100;
+    }
+  });
+
+  return {
+    reduction: totalReduction,
+    totalFinal: cart.total - totalReduction
+  };
+}, [cart, promoInfo]);
+
 const handleApplyPromo = async () => {
   if (!codePromo.trim()) return;
   setApplyingPromo(true);
   try {
-    // Supposons que ton backend ait un endpoint GET /promotions/valider?code=...
-    const { data } = await api.get(`/promotions/valider`, { params: { code: codePromo.trim() } });
+    const { data } = await api.get(`/promotions/valider`, { 
+      params: { code: codePromo.trim() } 
+    });
+
+    // Extraction sécurisée : on prend l'id du produit s'il existe
     setPromoInfo({
       code: data.data.code,
-      pourcentage: data.data.pourcentage
+      pourcentage: data.data.pourcentage,
+      productId: data.data.product?.id // Utilise le chaînage optionnel ici
     });
-    toast.success(`Code promo appliqué : -${data.data.pourcentage}%`);
+    
+    toast.success(`Code promo appliqué !`);
   } catch (err) {
     setPromoInfo(null);
     toast.error("Code promo invalide ou expiré.");
@@ -66,7 +95,6 @@ const handleApplyPromo = async () => {
     setApplyingPromo(false);
   }
 };
-
 
 
 
@@ -333,82 +361,67 @@ const handleApplyPromo = async () => {
           )}
         </div>
 
-{/* ── Résumé de commande (Adapté au style Récapitulatif Slate/Amber) ── */}
-<div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/10 space-y-6 relative overflow-hidden border border-white/5">
-  
-  <div className="relative z-10">
-    <h3 className="text-xl font-bold flex items-center gap-2">
+{/* ── Résumé de commande (Style Slate/Amber) ── */}
+  <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl shadow-slate-200/10 space-y-6 relative overflow-hidden border border-white/5">
+    <h3 className="text-xl font-bold flex items-center gap-2 relative z-10">
       <span className="w-1.5 h-6 bg-amber-500 rounded-full" /> 
       Votre commande
     </h3>
-    
-    {/* Zone de liste des produits avec scrollbar personnalisée */}
-    <div className="mt-6 space-y-4 max-h-80 overflow-y-auto pr-3 custom-scrollbar">
-      {cart.items.map((item) => (
-        <div key={item.id} className="group flex justify-between items-start gap-4 p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-100 truncate">
-              {item.productTitre}
-            </p>
-            <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
-              Quantité : {item.quantite}
-            </p>
+
+    <div className="mt-6 space-y-4 max-h-80 overflow-y-auto pr-3 relative z-10 custom-scrollbar">
+      {cart.items.map((item) => {
+        // Vérification si cet item précis est celui en promotion
+        const estEnPromo = promoInfo?.productId === item.productId;
+
+        return (
+          <div key={item.id} className="group flex justify-between items-start gap-4 p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-100 truncate">{item.productTitre}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Qté : {item.quantite}</p>
+                {estEnPromo && (
+                  <span className="text-[9px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-black border border-amber-500/20 animate-pulse">
+                    PROMO
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <p className={`text-sm font-bold ${estEnPromo ? 'text-amber-400' : 'text-slate-200'}`}>
+                {formatPrix(item.sousTotal)}
+              </p>
+            </div>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-sm font-bold text-amber-400">
-              {formatPrix(item.sousTotal)}
-            </p>
-          </div>
+        );
+      })}
+    </div>
+
+    {/* Section Calculs */}
+    <div className="space-y-3 pt-6 border-t border-white/10 relative z-10 text-sm">
+      <div className="flex justify-between text-slate-400">
+        <span>Sous-total</span>
+        <span>{formatPrix(cart.total)}</span>
+      </div>
+      
+      {reduction > 0 && (
+        <div className="flex justify-between font-bold text-amber-400">
+          <span>Réduction ({promoInfo?.code})</span>
+          <span>-{formatPrix(reduction)}</span>
         </div>
-      ))}
-    </div>
-  </div>
-
-  {/* Section Calculs (Sous-total & Réduction) */}
-  <div className="space-y-3 pt-6 border-t border-white/10 relative z-10">
-    <div className="flex justify-between items-center text-xs font-medium text-slate-400 uppercase tracking-widest">
-      <span>Sous-total</span>
-      <span className="text-slate-200">{formatPrix(cart.total)}</span>
-    </div>
-    
-    {promoInfo && (
-      <div className="flex justify-between items-center text-xs font-bold text-amber-400 animate-in slide-in-from-right-2">
-        <span>Code Promo ({promoInfo.code})</span>
-        <span>-{formatPrix(reduction)}</span>
-      </div>
-    )}
-
-    {/* Ligne Total Final */}
-    <div className="flex justify-between items-end pt-4 border-t border-white/10">
-      <span className="text-lg font-bold">Total à payer</span>
-      <div className="text-right">
-        <span className="text-3xl font-black text-amber-500 block leading-none drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-          {formatPrix(totalFinal)}
-        </span>
-        {promoInfo && (
-          <span className="text-[10px] text-slate-500 line-through mt-1 block">
-            {formatPrix(cart.total)}
-          </span>
-        )}
-      </div>
-    </div>
-  </div>
-
-  {/* Bouton de Téléchargement du Devis */}
-  <div className="pt-4 relative z-10">
-    <button 
-      onClick={handleDevis} 
-      disabled={devisLoading}
-      className="group flex items-center justify-center gap-3 w-full bg-slate-800/50 hover:bg-slate-800 text-slate-300 hover:text-white h-14 rounded-2xl text-xs font-black transition-all border border-white/5 hover:border-amber-500/30 active:scale-95 disabled:opacity-50"
-    >
-      {devisLoading ? (
-        <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
-      ) : (
-        <FileText className="w-5 h-5 text-amber-500 group-hover:scale-110 transition-transform" />
       )}
-      <span>{devisLoading ? "PRÉPARATION DU PDF..." : "TÉLÉCHARGER LE DEVIS (PDF)"}</span>
-    </button>
-  </div>
+
+      <div className="flex justify-between items-end pt-4 border-t border-white/10">
+        <span className="text-lg font-bold">Total à payer</span>
+        <div className="text-right">
+          <span className="text-3xl font-black text-amber-500 block leading-none">
+            {formatPrix(totalFinal)}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    {/* Effets de fond */}
+    <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl" />
 
   {/* Effets Visuels (Glow & Gradient) */}
   <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />

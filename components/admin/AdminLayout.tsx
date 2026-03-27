@@ -5,14 +5,15 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, ShoppingBag,
   Users, Tag, ArrowLeft, Folder, Crown, Star, Heart,
-  DollarSign
+  DollarSign, Truck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/admin/dashboard",    label: "Dashboard",     icon: LayoutDashboard },
   { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
-  { href: "/admin/paiement",     label: "Paiement",      icon: DollarSign },
+  { href: "/admin/paiement",     label: "Paiements",     icon: DollarSign },
+    { href: "/admin/livraison",  label: "Livraisons",    icon: Truck },
   { href: "/admin/categories",   label: "Categories",    icon: Folder },
   { href: "/admin/produits",     label: "Produits",      icon: BookOpen },
   { href: "/admin/utilisateurs", label: "Utilisateurs",  icon: Users },

@@ -166,6 +166,8 @@ export interface Payment {
   statut: StatutPaiement;
   referenceTransaction?: string;
   datePaiement: string;
+  userNom: string;
+  userEmail: string;
 }
 
 // ── Livraison ─────────────────────────────────────────────────────────────────
@@ -179,6 +181,8 @@ export interface Delivery {
   dateLivraisonPrevue?: string;
   dateLivraisonReelle?: string;
   notesLivreur?: string;
+  userNom: string;
+  userEmail: string;
 }
 
 // ── Avis ──────────────────────────────────────────────────────────────────────
