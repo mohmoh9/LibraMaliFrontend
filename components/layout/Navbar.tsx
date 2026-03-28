@@ -39,7 +39,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Acceuil" },
     { href: "/catalogue", label: "Catalogue" },
-    { href: "/catalogue?nouveautes=true", label: "Nouveautés" },
+    { href: "/a_propos", label: "A Propos" },
   ];
 
   return (

@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/admin/dashboard",    label: "Dashboard",     icon: LayoutDashboard },
   { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
+  { href: "/admin/livraison",  label: "Livraisons",    icon: Truck },
   { href: "/admin/paiement",     label: "Paiements",     icon: DollarSign },
-    { href: "/admin/livraison",  label: "Livraisons",    icon: Truck },
   { href: "/admin/categories",   label: "Categories",    icon: Folder },
   { href: "/admin/produits",     label: "Produits",      icon: BookOpen },
   { href: "/admin/utilisateurs", label: "Utilisateurs",  icon: Users },
