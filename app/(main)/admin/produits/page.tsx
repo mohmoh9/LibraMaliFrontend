@@ -193,11 +193,11 @@ export default function AdminProduitsPage() {
     // Mettre à jour l'image dans la liste sans recharger
     if (activeProductId) {
       setProducts(ps => ps.map(p =>
-        p.id === activeProductId ? { ...p, imageUrl: newUrl ?? undefined } : p
+        p.id === activeProductId ? { ...p, imageUrl: newUrl } : p
       ));
     }
     if (editProduct) {
-      setEditProduct(prev => prev ? { ...prev, imageUrl: newUrl ?? undefined } : null);
+      setEditProduct(prev => prev ? { ...prev, imageUrl: newUrl } : null);
     }
   };
 

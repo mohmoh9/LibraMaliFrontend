@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   LayoutDashboard, BookOpen, ShoppingBag,
-  Users, Tag, Heart, Star, ArrowLeft, Sparkles, CreditCard, Truck, Folder, Menu, X
+  Users, Tag, Heart, Star, ArrowLeft, Sparkles, CreditCard, Truck, Folder, Menu, X, BookMarked
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +14,7 @@ const NAV = [
   { href: "/admin/commandes",    label: "Commandes",     icon: ShoppingBag },
   { href: "/admin/livraison",    label: "Livraisons",    icon: Truck },
   { href: "/admin/paiement",     label: "Paiements",     icon: CreditCard },
-  { href: "/admin/categories",   label: "Categories",    icon: Folder },
+  { href: "/admin/categories",   label: "Categories",    icon: BookMarked },
   { href: "/admin/produits",     label: "Produits",      icon: BookOpen },
   { href: "/admin/utilisateurs", label: "Utilisateurs",  icon: Users },
   { href: "/admin/promotions",   label: "Promotions",    icon: Tag },

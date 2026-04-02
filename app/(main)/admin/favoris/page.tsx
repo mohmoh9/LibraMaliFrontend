@@ -26,8 +26,7 @@ interface FavoriAdmin {
   ajouteLe:        string;
   // enrichi côté liste
   userId?:         number;
-  userNom?:        string;
-}
+userNom: string;}
 
 interface TopProduit {
   productId:    number;
@@ -268,7 +267,7 @@ export default function AdminFavorisPage() {
                   <table className="w-full text-sm font-body">
                     <thead className="border-b border-sable">
                       <tr>
-                        {["Couverture", "Livre", "Produit", "Ajouté le", "Statut", ""].map(h => (
+                        {["Couverture", "Livre", "Client", "Ajouté le", "Statut", "Action"].map(h => (
                           <th key={h} className="px-4 py-3 text-left text-xs uppercase tracking-wider text-encre-muted whitespace-nowrap">
                             {h}
                           </th>
