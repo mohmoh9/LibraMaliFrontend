@@ -38,7 +38,7 @@ export interface AuthResponse {
   nouveauCompte: boolean;
 }
 
-// types/influenceur.ts (ou directement dans votre composant)
+// types/influenceur.ts 
 export interface InfluenceurStats {
   id: number;
   userId: number;
@@ -78,10 +78,10 @@ export interface Product {
   titre: string;
   auteur: string;
   prix: number;
-  prixPromo: number | null; // Changé ici : peut être null
+  prixPromo: number | null; 
   stock: number;
   enStock: boolean;
-  imageUrl: string | null; // Changé ici : ton JSON montre null
+  imageUrl: string | null; 
   description?: string;
   noteMoyenne: number;
   nbAvis: number;
@@ -90,7 +90,7 @@ export interface Product {
   categoryId: number;
   categoryNom: string;
   promotionCode: string | null;
-  promotionPct: number | null; // Peut être null selon ton JSON
+  promotionPct: number | null; 
 }
 
 // ── Panier ────────────────────────────────────────────────────────────────────

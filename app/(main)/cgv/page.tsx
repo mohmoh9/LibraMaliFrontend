@@ -122,7 +122,7 @@ export default function CGVPage() {
   };
 
   return (
-    <div className="min-h-screen bg-ivoire">
+    <div className="min-h-screen bg-ivoire relative overflow-hidden">
 
       {/* ── En-tête ──────────────────────────────────────────────────────── */}
       <header className="bg-encre text-ivoire py-20 relative overflow-hidden">

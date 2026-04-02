@@ -437,7 +437,7 @@ export default function RetoursPage() {
                 key={i}
                 className="relative bg-white rounded-2xl shadow-card p-6 text-center
                            animate-slide-up hover:shadow-card-hover hover:-translate-y-1 transition-all"
-                style={{ animationDelay: etape.delay, opacity: 0, animationFillMode: "forwards" }}
+                style={{ animationDelay: etape.delay, animationFillMode: "forwards" }}
               >
                 {/* Numéro */}
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full

@@ -512,9 +512,14 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
               {newProducts.map((p, i) => (
-                <div key={p.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${i * 60}ms`, opacity: 0, animationFillMode: "forwards" }}>
+<div 
+  key={p.id}
+  className="animate-slide-up"
+  style={{ 
+    animationDelay: `${i * 60}ms`, 
+    animationFillMode: "forwards" 
+  }}
+>
                   <ProductCard
                     product={p}
                     isFavori={isFavori(p.id)}
