@@ -50,27 +50,47 @@ const [promoInfo, setPromoInfo] = useState<{
 // État pour stocker les infos de la promo (incluant l'ID du produit cible)
 
 // ── CALCUL CIBLÉ PAR PRODUIT ────────────────────────────────────────
-const { reduction, totalFinal } = useMemo(() => {
-  if (!cart) return { reduction: 0, totalFinal: 0 };
-  if (!promoInfo) return { reduction: 0, totalFinal: cart.total };
+const { reduction, totalFinal, lignesAvecRemise } = useMemo(() => {
+  if (!cart) return { reduction: 0, totalFinal: 0, lignesAvecRemise: new Set<number>() };
+  if (!promoInfo) return { reduction: 0, totalFinal: cart.total, lignesAvecRemise: new Set<number>() };
 
   let totalReduction = 0;
+  // Ensemble des productId qui bénéficient effectivement de la remise
+  const eligibles = new Set<number>();
 
   cart.items.forEach((item) => {
-    // La promo s'applique si elle est globale (productId null) 
-    // ou si elle correspond à l'ID du produit de la ligne
-    const estEligible = !promoInfo.productId || promoInfo.productId === item.productId;
-    
+    /*
+     * Règle d'éligibilité :
+     *   - promoInfo.productId === undefined  → promo globale : s'applique à tous les articles
+     *   - promoInfo.productId === item.productId → promo ciblée : s'applique uniquement à ce produit
+     *   - promoInfo.productId !== item.productId → NON éligible : le produit n'est pas concerné
+     */
+    const estEligible =
+      promoInfo.productId === undefined ||
+      promoInfo.productId === null ||
+      promoInfo.productId === item.productId;
+
     if (estEligible) {
       totalReduction += (item.sousTotal * promoInfo.pourcentage) / 100;
+      eligibles.add(item.productId);
     }
   });
 
   return {
     reduction: totalReduction,
-    totalFinal: cart.total - totalReduction
+    totalFinal: cart.total - totalReduction,
+    lignesAvecRemise: eligibles,
   };
 }, [cart, promoInfo]);
+
+/*
+ * Indique si la promo est ciblée sur un seul produit
+ * (et non globale sur tout le panier)
+ */
+const estPromoCiblee =
+  promoInfo !== null &&
+  promoInfo.productId !== undefined &&
+  promoInfo.productId !== null;
 
 const handleApplyPromo = async () => {
   if (!codePromo.trim()) return;
@@ -140,7 +160,17 @@ const handleApplyPromo = async () => {
     }
     setLoading(true);
     try {
-      // 1. Créer la commande
+      /*
+       * Envoi du code promo au backend.
+       *
+       * Le backend (OrderService) recalcule la réduction de son côté —
+       * le total côté client (totalFinal) sert uniquement à l'affichage.
+       * C'est le backend qui fait autorité sur le montant final.
+       *
+       * Pour une promo ciblée (productId non null), le backend applique
+       * également la remise uniquement sur le produit éligible grâce
+       * au champ promotionCode/productId stocké sur la Promotion.
+       */
       const { data: orderData } = await api.post("/orders", {
         adresseLivraisonId: selectedAddressId,
         codePromo: codePromo.trim() || undefined,
@@ -290,10 +320,35 @@ const handleApplyPromo = async () => {
       {applyingPromo ? <Loader2 className="w-4 h-4 animate-spin" /> : "Appliquer"}
     </button>
   </div>
+
+  {/* Confirmation promo appliquée */}
   {promoInfo && (
-    <p className="text-xs text-success font-medium mt-2 flex items-center gap-1">
-      <CheckCircle className="w-3 h-3" /> Promotion {promoInfo.code} appliquée (-{promoInfo.pourcentage}%)
-    </p>
+    <div className="mt-3 space-y-1.5">
+      <p className="text-xs text-success font-medium flex items-center gap-1">
+        <CheckCircle className="w-3 h-3" />
+        Code <strong>{promoInfo.code}</strong> appliqué — -{promoInfo.pourcentage}%
+      </p>
+      {/*
+       * Avertissement ciblage produit :
+       * Si la promo ne concerne qu'un produit spécifique, on prévient
+       * l'utilisateur que la remise ne s'applique pas à tout le panier.
+       */}
+      {estPromoCiblee && (
+        <p className="text-xs text-amber-600 font-medium flex items-start gap-1.5 bg-amber-50 px-2.5 py-1.5 rounded-lg border border-amber-200">
+          <span className="shrink-0 mt-px">⚠️</span>
+          Cette promotion s'applique uniquement sur le produit éligible
+          dans votre panier. Les autres articles ne sont pas concernés.
+        </p>
+      )}
+      {/* Cas où la promo est valide mais aucun article du panier n'est éligible */}
+      {estPromoCiblee && lignesAvecRemise.size === 0 && (
+        <p className="text-xs text-error font-medium flex items-start gap-1.5 bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-200">
+          <span className="shrink-0">❌</span>
+          Aucun article de votre panier n'est éligible à cette promotion.
+          La réduction ne sera pas appliquée.
+        </p>
+      )}
+    </div>
   )}
 </div>
 
@@ -370,8 +425,20 @@ const handleApplyPromo = async () => {
 
     <div className="mt-6 space-y-4 max-h-80 overflow-y-auto pr-3 relative z-10 custom-scrollbar">
       {cart.items.map((item) => {
-        // Vérification si cet item précis est celui en promotion
-        const estEnPromo = promoInfo?.productId === item.productId;
+        /*
+         * Calcul de la remise ligne par ligne :
+         *   - Si la ligne est éligible (son productId est dans lignesAvecRemise),
+         *     on affiche le montant réduit et le prix barré.
+         *   - Sinon, on affiche le sousTotal normal sans modification.
+         *
+         * Cela permet à l'utilisateur de voir visuellement quels articles
+         * bénéficient de la promotion et lesquels ne sont pas concernés.
+         */
+        const estEnPromo = lignesAvecRemise.has(item.productId);
+        const remiseLigne = estEnPromo
+          ? (item.sousTotal * (promoInfo?.pourcentage ?? 0)) / 100
+          : 0;
+        const sousTotalReduit = item.sousTotal - remiseLigne;
 
         return (
           <div key={item.id} className="group flex justify-between items-start gap-4 p-2 -ml-2 rounded-xl hover:bg-white/5 transition-colors">
@@ -381,15 +448,28 @@ const handleApplyPromo = async () => {
                 <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">Qté : {item.quantite}</p>
                 {estEnPromo && (
                   <span className="text-[9px] bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded font-black border border-amber-500/20 animate-pulse">
-                    PROMO
+                    PROMO -{promoInfo?.pourcentage}%
                   </span>
                 )}
               </div>
             </div>
             <div className="text-right shrink-0">
-              <p className={`text-sm font-bold ${estEnPromo ? 'text-amber-400' : 'text-slate-200'}`}>
-                {formatPrix(item.sousTotal)}
-              </p>
+              {estEnPromo ? (
+                /* Produit éligible : prix barré + prix réduit */
+                <div>
+                  <p className="text-xs text-slate-500 line-through leading-none">
+                    {formatPrix(item.sousTotal)}
+                  </p>
+                  <p className="text-sm font-bold text-amber-400">
+                    {formatPrix(sousTotalReduit)}
+                  </p>
+                </div>
+              ) : (
+                /* Produit non éligible : prix normal sans modification */
+                <p className="text-sm font-bold text-slate-200">
+                  {formatPrix(item.sousTotal)}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -404,10 +484,29 @@ const handleApplyPromo = async () => {
       </div>
       
       {reduction > 0 && (
-        <div className="flex justify-between font-bold text-amber-400">
-          <span>Réduction ({promoInfo?.code})</span>
-          <span>-{formatPrix(reduction)}</span>
-        </div>
+        <>
+          <div className="flex justify-between font-bold text-amber-400">
+            <span>
+              Réduction ({promoInfo?.code})
+              {/*
+               * Si la promo est ciblée, on précise le nombre de produits concernés
+               * pour éviter toute ambiguïté sur le montant réduit.
+               */}
+              {estPromoCiblee && lignesAvecRemise.size > 0 && (
+                <span className="ml-1 text-[10px] font-normal text-amber-500/70">
+                  · {lignesAvecRemise.size} article{lignesAvecRemise.size > 1 ? "s" : ""} éligible{lignesAvecRemise.size > 1 ? "s" : ""}
+                </span>
+              )}
+            </span>
+            <span>-{formatPrix(reduction)}</span>
+          </div>
+          {/* Détail visuel de ce qui n'est PAS remisé (promo ciblée uniquement) */}
+          {estPromoCiblee && cart.items.some(i => !lignesAvecRemise.has(i.productId)) && (
+            <p className="text-[10px] text-slate-500 italic">
+              Les autres articles du panier ne bénéficient pas de cette promotion.
+            </p>
+          )}
+        </>
       )}
 
       <div className="flex justify-between items-end pt-4 border-t border-white/10">

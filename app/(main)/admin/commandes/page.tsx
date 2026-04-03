@@ -659,9 +659,11 @@ export default function AdminCommandesPage() {
                                 {formatPrix(order.total)}
                               </span>
                               {order.montantReduction && order.montantReduction > 0 && (
+                                <div>
                                 <p className="text-[10px] text-success font-body">
                                   -{formatPrix(order.montantReduction)}
                                 </p>
+                                </div>
                               )}
                             </td>
 

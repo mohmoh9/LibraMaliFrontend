@@ -11,10 +11,10 @@ import { useAuthStore } from "@/store/auth.store";
 import type { Product, Category, PageResponse, ApiResponse } from "@/types";
 
 const TRIS = [
+  { val: "titre",       label: "A → Z" },
   { val: "creeLe",      label: "Nouveautés" },
   { val: "prix",        label: "Prix ↑" },
   { val: "noteMoyenne", label: "Mieux notés" },
-  { val: "titre",       label: "A → Z" },
 ];
 
 const PAGE_SIZE = 12;

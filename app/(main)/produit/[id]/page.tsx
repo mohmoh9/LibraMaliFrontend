@@ -16,6 +16,7 @@ import { formatPrix, formatDate, cn } from "@/lib/utils";
 import { useCartStore } from "@/store/cart.store";
 import { useAuthStore } from "@/store/auth.store";
 import { useFavoris } from "@/hooks/useFavoris";
+import ProductCard from "@/components/catalogue/ProductCard";
 import type { Product, Review, PageResponse, ApiResponse } from "@/types";
 
 /* ── Sélecteur d'étoiles interactif ─────────────────────────────────────── */
@@ -98,6 +99,9 @@ export default function ProduitPage() {
   const [deletingAvis, setDeletingAvis] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
+  // Livres similaires
+  const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
+
   /* ── Chargement produit ─────────────────────────────────────────────── */
   useEffect(() => {
     if (!id) return;
@@ -108,7 +112,23 @@ export default function ProduitPage() {
           api.get<ApiResponse<Product>>(`/products/${productId}`),
           api.get<ApiResponse<PageResponse<Review>>>(`/products/${productId}/reviews?page=0&size=5`),
         ]);
-        if (prodRes.data.success) setProduct(prodRes.data.data);
+        if (prodRes.data.success) {
+          const prod = prodRes.data.data;
+          setProduct(prod);
+
+          // Charger les livres similaires (même catégorie, exclure le produit courant)
+          if (prod.categoryId) {
+            api.get(`/products/category/${prod.categoryId}?page=0&size=7&sortBy=noteMoyenne&direction=desc`)
+              .then(({ data }) => {
+                const payload = data?.data ?? data;
+                const items: Product[] = (payload?.content ?? [])
+                  .filter((p: Product) => p.id !== productId)
+                  .slice(0, 6);
+                setSimilarProducts(items);
+              })
+              .catch(() => {});
+          }
+        }
         if (revRes.data.success) {
           setReviews(revRes.data.data.content ?? []);
           setTotalReviews(revRes.data.data.totalElements ?? 0);
@@ -326,7 +346,7 @@ export default function ProduitPage() {
         <Link href="/" className="hover:text-slate-900 transition-colors">Accueil</Link>
         <span className="text-slate-300">/</span>
         <Link href="/catalogue" className="hover:text-slate-900 transition-colors">Catalogue</Link>
-        {product.categoryNom && (
+        {product.categoryId && (
           <>
             <span className="text-slate-300">/</span>
             <Link href={`/catalogue?categoryId=${product.categoryId}`}
@@ -372,7 +392,7 @@ export default function ProduitPage() {
 
           {/* Catégorie + titre + auteur */}
           <div className="space-y-3">
-            {product.categoryNom && (
+            {product.categoryId && (
               <Link href={`/catalogue?categoryId=${product.categoryId}`}
                 className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 bg-amber-50 px-3 py-1 rounded-full hover:bg-amber-100 transition-colors">
                 {product.categoryNom}
@@ -486,6 +506,14 @@ export default function ProduitPage() {
                   <Heart className={cn("w-5 h-5 transition-all", toggling && "animate-pulse", favori && "fill-current")} />
                 </button>
 
+                {/* Devis PDF */}
+                <button onClick={handleDevis} disabled={devisLoading}
+                  aria-label="Télécharger le devis"
+                  className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all active:scale-[0.95] disabled:opacity-50">
+                  {devisLoading
+                    ? <Loader2 className="w-5 h-5 animate-spin" />
+                    : <FileText className="w-5 h-5" />}
+                </button>
               </div>
             </div>
           )}
@@ -745,6 +773,65 @@ export default function ProduitPage() {
           </div>
         )}
       </section>
+
+      {/* ── Livres similaires ────────────────────────────────────────── */}
+      {similarProducts.length > 0 && (
+        <section className="mt-24">
+          {/* En-tête */}
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600 mb-2">
+                <span className="w-5 h-px bg-amber-500 inline-block" />
+                {product?.categoryNom ?? "Même catégorie"}
+              </span>
+              <h2 className="font-display text-2xl font-bold text-slate-900">
+                Vous pourriez aussi aimer
+              </h2>
+            </div>
+            {product?.categoryId && (
+              <Link
+                href={`/catalogue?categoryId=${product.categoryId}`}
+                className="hidden sm:flex items-center gap-1.5 text-sm font-medium text-slate-400
+                           hover:text-slate-900 transition-colors pb-1"
+              >
+                Voir toute la catégorie
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+
+          {/* Grille 2→3→6 colonnes */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+            {similarProducts.map((p, i) => (
+              <div
+                key={p.id}
+                className="animate-in fade-in slide-in-from-bottom-3 duration-500 fill-mode-forwards"
+                style={{ animationDelay: `${i * 55}ms` }}
+              >
+                <ProductCard
+                  product={p}
+                  isFavori={isFavori(p.id)}
+                  onToggleFavori={(e) => toggleFavori(p.id, e)}
+                  isToggling={isToggling(p.id)}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Lien mobile */}
+          {product?.categoryId && (
+            <div className="flex sm:hidden justify-center mt-6">
+              <Link
+                href={`/catalogue?categoryId=${product.categoryId}`}
+                className="btn-secondary text-sm"
+              >
+                Voir toute la catégorie
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Retour catalogue */}
       <div className="mt-16 pt-8 border-t border-slate-100">
