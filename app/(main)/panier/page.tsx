@@ -251,7 +251,9 @@ const handleRemove = async (itemId: number) => {
 
               <div className="flex justify-between items-center text-sm font-medium">
                 <span className="text-slate-400">Livraison</span>
-                <span className="text-emerald-400 font-bold uppercase text-[10px] tracking-widest">Voir Livraison & Détails</span>
+                <span className="text-emerald-400 font-bold uppercase text-[10px] tracking-widest">
+<a href="/livraison">Voir</a>
+                </span>
               </div>
 
               <div className="flex justify-between items-end pt-4 border-t border-white/10">

@@ -308,7 +308,7 @@ const handleApplyPromo = async () => {
     <input
       value={codePromo}
       onChange={(e) => setCodePromo(e.target.value.toUpperCase())}
-      placeholder="EX: LIRE20"
+      placeholder="EX: CODEPROMO"
       className="input-field max-w-[200px]"
     />
     <button 

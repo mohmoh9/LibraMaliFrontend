@@ -832,7 +832,7 @@ export default function HomePage() {
 
           <p className="text-center text-sm text-encre-muted font-body mt-8">
             Vous avez d&apos;autres questions ?{" "}
-            <a href="mailto:contact@libramali.ml"
+            <a href="mailto:libramali16@gmail.com"
               className="text-or hover:underline font-medium">
               Contactez-nous →
             </a>
@@ -916,8 +916,8 @@ export default function HomePage() {
 
               <div className="space-y-4">
                 {[
-                  { icon: <Phone className="w-5 h-5" />,  label: "Téléphone", val: "+223 70 00 00 00", sub: "Lun–Sam, 8h–18h" },
-                  { icon: <Mail className="w-5 h-5" />,   label: "Email",     val: "contact@libramali.ml", sub: "Réponse sous 24h" },
+                  { icon: <Phone className="w-5 h-5" />,  label: "Téléphone", val: "+223 70 71 72 73", sub: "Lun–Sam, 8h–18h" },
+                  { icon: <Mail className="w-5 h-5" />,   label: "Email",     val: "libramali16@gmail.com", sub: "Réponse sous 24h" },
                   { icon: <MapPin className="w-5 h-5" />, label: "Adresse",   val: "ACI 2000, Bamako", sub: "Mali" },
                   { icon: <Clock className="w-5 h-5" />,  label: "Horaires",  val: "Lun–Sam : 8h–18h", sub: "Livraison 7j/7" },
                 ].map((item, i) => (

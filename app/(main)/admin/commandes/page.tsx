@@ -613,7 +613,7 @@ export default function AdminCommandesPage() {
                           <tr key={order.id} className="hover:bg-ivoire transition-colors group">
                             {/* ID */}
                             <td className="px-4 py-3">
-                              <span className="font-mono text-xs text-encre-muted">#{order.id}</span>
+                              <span className="font-mono text-xs text-encre-muted">#CMD{order.id}</span>
                             </td>
 
                             {/* Client */}

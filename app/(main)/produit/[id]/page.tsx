@@ -505,15 +505,6 @@ export default function ProduitPage() {
                   )}>
                   <Heart className={cn("w-5 h-5 transition-all", toggling && "animate-pulse", favori && "fill-current")} />
                 </button>
-
-                {/* Devis PDF */}
-                <button onClick={handleDevis} disabled={devisLoading}
-                  aria-label="Télécharger le devis"
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all active:scale-[0.95] disabled:opacity-50">
-                  {devisLoading
-                    ? <Loader2 className="w-5 h-5 animate-spin" />
-                    : <FileText className="w-5 h-5" />}
-                </button>
               </div>
             </div>
           )}

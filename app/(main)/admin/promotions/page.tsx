@@ -461,7 +461,7 @@ const handleSave = async (values: PromoForm) => {
               <label className="input-label">Code *</label>
               <input
                 {...form.register("code")}
-                placeholder="EX: LIRE20"
+                placeholder="EX: CODEPROMO"
                 className="input-field font-mono uppercase"
                 onChange={e => form.setValue("code", e.target.value.toUpperCase())}
               />
@@ -536,7 +536,7 @@ const handleSave = async (values: PromoForm) => {
     <label className="input-label">Code du coupon *</label>
     <input
       {...form.register("code")}
-      placeholder="EX: MALI20"
+      placeholder="EX: CODEPROMO"
       className="input-field font-mono uppercase font-bold"
       onChange={e => form.setValue("code", e.target.value.toUpperCase())}
     />

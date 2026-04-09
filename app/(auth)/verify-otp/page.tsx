@@ -164,34 +164,19 @@ export default function VerifyOtpPage() {
     }
   }, [email, login, router, verifying, verified]);
 
-const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); // 3. Utilisez-le ici
+const handleFormSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  const code = digits.join(""); // On récupère les 6 chiffres
+  
+  if (code.length !== OTP_LENGTH) {
+    setError("Veuillez saisir le code complet.");
+    return;
+  }
 
-    try {
-      await api.post("/auth/send-otp", { email });
-      
-      sessionStorage.setItem("auth_email", email);
-      sessionStorage.setItem("auth_mode", "login");
-      router.push("/verify-otp");
-      
-    } catch (err: any) {
-      const msg = getErrorMessage(err);
-      
-      // Si le code est déjà envoyé (erreur "Veuillez patienter"), 
-      // on redirige quand même vers la saisie.
-      if (msg.includes("Veuillez patienter") || err.response?.status === 429) {
-        sessionStorage.setItem("auth_email", email);
-        sessionStorage.setItem("auth_mode", "login");
-        router.push("/verify-otp");
-        return; 
-      }
-
-      toast.error(msg);
-    } finally {
-      setLoading(false); // 4. Et ici pour libérer le bouton
-    }
-  };
+  // On appelle la fonction de vérification que tu as déjà créée
+  await verifyCode(code);
+};
 
   /* ── Renvoi OTP ───────────────────────────────────────────────────────── */
   const handleResend = async () => {
@@ -219,13 +204,14 @@ const handleSubmit = async (e: React.FormEvent) => {
   const codeComplete = digits.filter(Boolean).length === OTP_LENGTH;
 
   return (
-    <div className="min-h-screen flex bg-ivoire">
-
+<div className="h-screen w-full flex bg-ivoire overflow-hidden">
       {/* ── Panneau gauche ─────────────────────────────────────────────── */}
-      <div className="hidden lg:flex w-[45%] bg-encre flex-col justify-between p-14 relative overflow-hidden">
-        {/* Halos */}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-or/8 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-or/5 blur-3xl pointer-events-none" />
+<div className="hidden lg:flex w-[45%] bg-encre flex-col justify-between p-14 relative overflow-hidden h-full">
+  {/* Ajoute overflow-hidden ici aussi pour être sûr */}
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+     <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-or/8 blur-3xl" />
+     <div className="absolute bottom-0 left-0 w-72 h-72 rounded-full bg-or/5 blur-3xl" />
+  </div>
         {/* Grain */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }} />
@@ -294,8 +280,8 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
 
       {/* ── Panneau droit — formulaire OTP ────────────────────────────── */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12">
-        <div className="w-full max-w-[420px] animate-fade-in">
+<div className="flex-1 h-full overflow-y-auto flex flex-col justify-center items-center p-6 sm:p-12">
+   <div className="w-full max-w-[420px] py-8 animate-fade-in">
 
           {/* Retour */}
           <Link href="/login"
@@ -332,87 +318,82 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           {/* ── Formulaire OTP ──────────────────────────────────────── */}
-          {verified ? (
-            /* État succès */
-            <div className="py-8 flex flex-col items-center gap-4 animate-fade-in">
-              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-success" />
-              </div>
-              <p className="font-display text-xl font-bold text-encre">Code vérifié !</p>
-              <p className="text-sm text-encre-muted font-body flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                Redirection en cours…
-              </p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Cases OTP */}
-              <div className="space-y-3">
-                <div className="flex gap-2.5" onPaste={handlePaste}>
-                  {digits.map((digit, i) => (
-                    <input
-                      key={i}
-                      ref={(el) => { inputsRef.current[i] = el; }}
-                      type="text"
-                      inputMode="numeric"
-                      pattern="\d*"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleChange(i, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(i, e)}
-                      disabled={verifying}
-                      aria-label={`Chiffre ${i + 1}`}
-                      className={cn(
-                        "flex-1 h-14 text-center text-xl font-bold font-mono rounded-xl border-2",
-                        "transition-all duration-150 bg-white text-encre",
-                        "focus:outline-none focus:ring-4",
-                        // États
-                        error
-                          ? "border-error focus:border-error focus:ring-error/15 animate-shake"
-                          : digit
-                            ? "border-encre focus:border-or focus:ring-or/20 bg-encre/[0.02]"
-                            : "border-sable-dark focus:border-or focus:ring-or/20",
-                        verifying && "opacity-60 cursor-not-allowed",
-                      )}
-                    />
-                  ))}
-                </div>
+  {verified ? (
+  <div className="py-8 flex flex-col items-center gap-4 animate-fade-in">
+    <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
+      {/* Utilise success ou text-green-600 si "success" n'est pas défini */}
+      <CheckCircle className="w-8 h-8 text-green-600" />
+    </div>
+    <p className="font-display text-xl font-bold text-encre">Code vérifié !</p>
+    <div className="text-sm text-encre-muted font-body flex items-center gap-2">
+      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      <span>Redirection en cours…</span>
+    </div>
+  </div>
+) : (
+  // CHANGEMENT ICI : handleFormSubmit au lieu de handleSubmit
+  <form onSubmit={handleFormSubmit} className="space-y-8">
+    <div className="space-y-3">
+<div className="flex justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+  {digits.map((digit, i) => (
+    <input
+      key={i}
+      ref={(el) => { inputsRef.current[i] = el; }}
+            type="text"
+            inputMode="numeric"
+            pattern="\d*"
+            maxLength={1}
+            value={digit}
+            onChange={(e) => handleChange(i, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(i, e)}
+            disabled={verifying}
+className={cn(
+        // Remplace flex-1 par une taille fixe et responsive
+        "w-10 h-12 sm:w-14 sm:h-16 text-center text-xl font-bold rounded-xl border-2",
+        "transition-all duration-150 bg-white text-encre",
+        "focus:outline-none focus:ring-4",
+        error 
+          ? "border-red-500 focus:ring-red-500/20" 
+          : digit 
+            ? "border-encre focus:ring-or/20 bg-encre/[0.02]" 
+            : "border-gray-200 focus:border-or focus:ring-or/20",
+        verifying && "opacity-50 cursor-not-allowed"
+      )}
+          />
+        ))}
+      </div>
 
-                {/* Message d'erreur */}
-                {error && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl animate-fade-in">
-                    <div className="w-1.5 h-1.5 rounded-full bg-error shrink-0" />
-                    <p className="text-xs text-error font-body">{error}</p>
-                  </div>
-                )}
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl animate-in fade-in slide-in-from-top-1">
+          <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+          <p className="text-xs text-red-600 font-body font-medium">{error}</p>
+        </div>
+      )}
+    </div>
 
-                {/* Aide paste */}
-                <p className="text-center text-xs text-encre-muted font-body">
-                  Vous pouvez coller le code directement depuis votre email.
-                </p>
-              </div>
+    <button
+      type="submit"
+      disabled={verifying || !codeComplete}
+      className={cn(
+        "w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold transition-all",
+        codeComplete && !verifying
+          ? "bg-encre text-ivoire hover:bg-encre/90 active:scale-[0.98]"
+          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+      )}
+    >
+      {verifying ? (
+        <>
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>Vérification…</span>
+        </>
+      ) : (
+        <>
+          <ShieldCheck className="w-4 h-4" />
+          <span>Confirmer le code</span>
+        </>
+      )}
+    </button>
 
-              {/* Bouton Confirmer */}
-              <button
-                type="submit"
-                disabled={verifying || !codeComplete}
-                className={cn(
-                  "w-full justify-center py-4 text-base transition-all",
-                  codeComplete
-                    ? "btn-primary"
-                    : "btn-secondary opacity-60 cursor-not-allowed"
-                )}
-              >
-                {verifying
-                  ? <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Vérification…
-                    </>
-                  : <>
-                      <ShieldCheck className="w-4 h-4" />
-                      Confirmer le code
-                    </>}
-              </button>
 
               {/* Renvoi */}
               <div className="text-center space-y-2">
