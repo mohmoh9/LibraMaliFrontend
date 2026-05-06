@@ -61,6 +61,7 @@ export interface User {
   emailVerifie: boolean;
   creeLe: string;
   misAJourLe?: string;
+    aMotDePasse: boolean;
 }
 
 // ── Catégorie ─────────────────────────────────────────────────────────────────
