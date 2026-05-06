@@ -117,14 +117,14 @@ const FAQ = [
 ];
 
 const GENRES = [
-  { nom: "Littérature africaine", emoji: "🌍", color: "from-amber-500 to-orange-500" },
-  { nom: "Romans & Fiction",      emoji: "📖", color: "from-blue-500 to-indigo-500" },
-  { nom: "Sciences & Techniques", emoji: "🔬", color: "from-green-500 to-teal-500" },
-  { nom: "Histoire & Politique",  emoji: "🏛️", color: "from-purple-500 to-pink-500" },
-  { nom: "Jeunesse & Enfants",    emoji: "🌟", color: "from-yellow-400 to-amber-500" },
-  { nom: "Développement perso",   emoji: "🧠", color: "from-rose-500 to-pink-500" },
-  { nom: "Religion & Spiritualité",emoji: "☪️", color: "from-slate-600 to-slate-800" },
-  { nom: "Business & Économie",   emoji: "📊", color: "from-cyan-500 to-blue-500" },
+  { nom: "Business & Économie", emoji: "🌍", color: "from-amber-500 to-orange-500" },
+  { nom: "Développement perso",      emoji: "📖", color: "from-blue-500 to-indigo-500" },
+  { nom: "Histoire & Politique", emoji: "🔬", color: "from-green-500 to-teal-500" },
+  { nom: "Jeunesse & Enfants",  emoji: "🏛️", color: "from-purple-500 to-pink-500" },
+  { nom: "Littérature africaine",    emoji: "🌟", color: "from-yellow-400 to-amber-500" },
+  { nom: "Religion & Spiritualité",   emoji: "🧠", color: "from-rose-500 to-pink-500" },
+  { nom: "Romans & Fiction",emoji: "☪️", color: "from-slate-600 to-slate-800" },
+  { nom: "Sciences & Techniques",   emoji: "📊", color: "from-cyan-500 to-blue-500" },
 ];
 
 /* ═══════════════════════════════════════════════════════════

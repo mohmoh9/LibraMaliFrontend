@@ -89,7 +89,7 @@ export function useFavoris() {
         toast.success("Retiré des favoris.");
       } else {
         await api.post(`/favoris?productId=${productId}`);
-        toast.success("Ajouté aux favoris ♥");
+        toast.success("Ajouté aux favoris.");
       }
     } catch {
       // Rollback si erreur

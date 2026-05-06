@@ -17,7 +17,7 @@ const TRIS = [
   { val: "noteMoyenne", label: "Mieux notés" },
 ];
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 15;
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 function SkeletonBook() {

@@ -349,7 +349,7 @@ function SimulateurLivraison() {
               <p className="font-semibold text-amber-800 text-sm">Ville non reconnue</p>
               <p className="text-xs text-amber-700 font-body mt-1">
                 Vérifiez l'orthographe ou{" "}
-                <a href="mailto:contact@libramali.ml" className="underline font-medium">
+                <a href="mailto:libramali16@gmail.com" className="underline font-medium">
                   contactez-nous
                 </a>{" "}
                 pour vérifier si votre ville est desservie.
@@ -572,11 +572,11 @@ export default function LivraisonPage() {
 
           <InfoBox type="info">
             <strong>Votre ville n'est pas listée ?</strong> Contactez-nous à{" "}
-            <a href="mailto:contact@libramali.ml" className="underline font-medium">
-              contact@libramali.ml
+            <a href="mailto:libramali16@gmail.com" className="underline font-medium">
+              libramali16@gmail.com
             </a>{" "}
             ou au{" "}
-            <a href="tel:+22370000000" className="underline font-medium">+223 70 00 00 00</a>.
+            <a href="tel:+22370717273" className="underline font-medium">+223 70 71 72 73</a>.
             Nous faisons notre maximum pour desservir toutes les communes du Mali.
           </InfoBox>
         </section>
@@ -778,7 +778,7 @@ export default function LivraisonPage() {
                 Notre équipe est disponible du lundi au samedi de 8h à 18h.
               </p>
               <div className="space-y-3">
-                <a href="mailto:contact@libramali.ml"
+                <a href="mailto:libramali16@gmail.com"
                   className="flex items-center gap-3 p-3 bg-ivoire rounded-xl hover:bg-sable/40 transition-colors group">
                   <div className="w-8 h-8 bg-or/10 text-or rounded-lg flex items-center justify-center shrink-0
                                   group-hover:bg-or group-hover:text-white transition-all">
@@ -786,10 +786,10 @@ export default function LivraisonPage() {
                   </div>
                   <div>
                     <p className="text-xs text-encre-muted font-body">Email</p>
-                    <p className="text-sm font-medium text-encre">contact@libramali.ml</p>
+                    <p className="text-sm font-medium text-encre">libramali16@gmail.com</p>
                   </div>
                 </a>
-                <a href="tel:+22370000000"
+                <a href="tel:+22370717273"
                   className="flex items-center gap-3 p-3 bg-ivoire rounded-xl hover:bg-sable/40 transition-colors group">
                   <div className="w-8 h-8 bg-or/10 text-or rounded-lg flex items-center justify-center shrink-0
                                   group-hover:bg-or group-hover:text-white transition-all">
@@ -797,7 +797,7 @@ export default function LivraisonPage() {
                   </div>
                   <div>
                     <p className="text-xs text-encre-muted font-body">Téléphone — Lun–Sam 8h–18h</p>
-                    <p className="text-sm font-medium text-encre">+223 70 00 00 00</p>
+                    <p className="text-sm font-medium text-encre">+223 70 71 72 73</p>
                   </div>
                 </a>
               </div>

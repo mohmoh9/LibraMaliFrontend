@@ -18,7 +18,7 @@ const ETAPES_RETOUR = [
   {
     num:   "01",
     titre: "Contactez-nous",
-    desc:  "Envoyez un email à retours@libramali.ml ou ouvrez une demande depuis votre espace client. Indiquez votre numéro de commande et la raison du retour.",
+    desc:  "Envoyez un email à libramali16@gmail.com ou ouvrez une demande depuis votre espace client. Indiquez votre numéro de commande et la raison du retour.",
     icon:  <Mail className="w-6 h-6" />,
     color: "bg-blue-50 text-blue-600",
     delay: "0ms",
@@ -195,7 +195,7 @@ function FormulaireRetour() {
           <input
             value={form.numeroCde}
             onChange={e => setForm(f => ({ ...f, numeroCde: e.target.value }))}
-            placeholder="Ex : 1042"
+            placeholder="Numéro de ta commande"
             className="input-field"
             required
           />
@@ -584,7 +584,7 @@ export default function RetoursPage() {
                 desc:  "Refusez le colis ou émettez des réserves écrites sur le bon de livraison. Contactez-nous dans les 48h avec des photos. Nous réexpédions immédiatement sans attendre le retour.",
                 bg:    "bg-amber-50", col: "text-amber-600",
                 action: "Contacter le support",
-                href:   "mailto:retours@libramali.ml",
+                href:   "mailto:libramali16@gmail.com",
               },
               {
                 icon:  <BookOpen className="w-5 h-5" />,
@@ -592,7 +592,7 @@ export default function RetoursPage() {
                 desc:  "Pour les retours concernant des commandes passées par des établissements scolaires ou entreprises, contactez directement notre service B2B pour une procédure adaptée.",
                 bg:    "bg-purple-50", col: "text-purple-600",
                 action: "Contacter le B2B",
-                href:   "mailto:devis@libramali.ml",
+                href:   "mailto:libramali16@gmail.com",
               },
               {
                 icon:  <RefreshCcw className="w-5 h-5" />,
@@ -667,7 +667,7 @@ export default function RetoursPage() {
                   Contact direct
                 </h3>
                 <div className="space-y-4">
-                  <a href="mailto:retours@libramali.ml"
+                  <a href="mailto:libramali16@gmail.com"
                     className="flex items-center gap-3 group">
                     <div className="w-9 h-9 rounded-xl bg-or/10 text-or flex items-center justify-center shrink-0
                                     group-hover:bg-or group-hover:text-white transition-all">
@@ -676,11 +676,11 @@ export default function RetoursPage() {
                     <div>
                       <p className="text-xs text-encre-muted font-body uppercase tracking-wider">Email retours</p>
                       <p className="text-sm font-medium text-encre group-hover:text-or transition-colors">
-                        retours@libramali.ml
+                        libramali16@gmail.com
                       </p>
                     </div>
                   </a>
-                  <a href="tel:+22370000000"
+                  <a href="tel:+22370717273"
                     className="flex items-center gap-3 group">
                     <div className="w-9 h-9 rounded-xl bg-or/10 text-or flex items-center justify-center shrink-0
                                     group-hover:bg-or group-hover:text-white transition-all">
@@ -689,7 +689,7 @@ export default function RetoursPage() {
                     <div>
                       <p className="text-xs text-encre-muted font-body uppercase tracking-wider">Téléphone</p>
                       <p className="text-sm font-medium text-encre group-hover:text-or transition-colors">
-                        +223 70 00 00 00
+                        +223 70 71 72 73
                       </p>
                     </div>
                   </a>
@@ -765,7 +765,7 @@ export default function RetoursPage() {
                 Parcourir le catalogue
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="mailto:contact@libramali.ml"
+              <a href="mailto:libramali16@gmail.com"
                 className="inline-flex items-center gap-2 px-8 py-3 bg-white/10 border border-white/20
                            rounded-full text-ivoire text-sm font-medium hover:bg-white/20 transition-colors">
                 <Mail className="w-4 h-4" />
